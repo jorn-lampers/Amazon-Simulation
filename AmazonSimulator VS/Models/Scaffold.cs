@@ -7,7 +7,7 @@ namespace Models
 {
     public class Scaffold : Entity
     {
-        public Scaffold(double x, double y, double z, double rotationX, double rotationY, double rotationZ) : base("scaffold", x, y, z, rotationX, rotationY, rotationZ)
+        public Scaffold(float x, float y, float z, float rotationX, float rotationY, float rotationZ) : base("scaffold", x, y, z, rotationX, rotationY, rotationZ)
         {
 
         }

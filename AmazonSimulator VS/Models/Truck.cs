@@ -7,7 +7,7 @@ namespace Models
 {
     public class Truck : Entity
     {
-        public Truck(double x, double y, double z, double rotationX, double rotationY, double rotationZ) : base("truck", x, y, z, rotationX, rotationY, rotationZ)
+        public Truck(float x, float y, float z, float rotationX, float rotationY, float rotationZ) : base("truck", x, y, z, rotationX, rotationY, rotationZ)
         {
 
         }

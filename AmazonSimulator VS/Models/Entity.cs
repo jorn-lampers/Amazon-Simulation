@@ -1,31 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Newtonsoft.Json;
 
 namespace Models
 {
     public abstract class Entity : IUpdatable
     {
-        private double _x = 0;
-        private double _y = 0;
-        private double _z = 0;
-        private double _rX = 0;
-        private double _rY = 0;
-        private double _rZ = 0;
+        private float _x = 0;
+        private float _y = 0;
+        private float _z = 0;
+        private float _rX = 0;
+        private float _rY = 0;
+        private float _rZ = 0;
 
         public string type { get; }
         public Guid guid { get; }
-        public double x { get { return _x; } }
-        public double y { get { return _y; } }
-        public double z { get { return _z; } }
-        public double rotationX { get { return _rX; } }
-        public double rotationY { get { return _rY; } }
-        public double rotationZ { get { return _rZ; } }
+        public float x { get { return _x; } }
+        public float y { get { return _y; } }
+        public float z { get { return _z; } }
+        public float rotationX { get { return _rX; } }
+        public float rotationY { get { return _rY; } }
+        public float rotationZ { get { return _rZ; } }
 
         public bool needsUpdate = true;
 
-        public Entity(string type, double x, double y, double z, double rotationX, double rotationY, double rotationZ)
+        public Entity(string type, float x, float y, float z, float rotationX, float rotationY, float rotationZ)
         {
             this.type = type;
             this.guid = Guid.NewGuid();
@@ -39,7 +40,7 @@ namespace Models
             this._rZ = rotationZ;
         }
 
-        public virtual void Move(double x, double y, double z)
+        public virtual void Move(float x, float y, float z)
         {
             this._x = x;
             this._y = y;
@@ -48,7 +49,12 @@ namespace Models
             needsUpdate = true;
         }
 
-        public virtual void Rotate(double rotationX, double rotationY, double rotationZ)
+        public virtual void Move(Vector3 pos)
+        {
+            Move(pos.X, pos.Y, pos.Z);
+        }
+
+        public virtual void Rotate(float rotationX, float rotationY, float rotationZ)
         {
             this._rX = rotationX;
             this._rY = rotationY;
