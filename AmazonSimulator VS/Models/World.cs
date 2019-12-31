@@ -13,7 +13,7 @@ namespace Models {
         private Graph graph;
         
         public World() {
-            Robot r = CreateRobot(0,0,0);
+            PathfindingEntity r = CreateRobot(0,0,0);
 
             Vector3 sw = new Vector3(-10.0f, 0.0f, -10.0f);
             Vector3 nw = new Vector3(-10.0f, 0.0f, 10.0f);
@@ -53,10 +53,11 @@ namespace Models {
             graph = new Graph(vertices, edges);
 
             //r.Move(4.6, 0, 13);
-            r.setTarget(nw, graph);
+            r.setPathfindingTarget(nw, graph);
         }
 
-        private Robot CreateRobot(float x, float y, float z) {
+        private PathfindingEntity CreateRobot(float x, float y, float z)
+        {
             Robot r = new Robot(x,y,z,0,0,0);
             worldObjects.Add(r);
             return r;
@@ -89,15 +90,14 @@ namespace Models {
             for(int i = 0; i < worldObjects.Count; i++) {
                 Entity u = worldObjects[i];
 
-                if(u is Robot)
+                if(u is PathfindingEntity)
                 {
-                    Robot r = (Robot)u;
-                    r.Update(tick);
-                    if (r.isWaiting())
+                    PathfindingEntity r = (PathfindingEntity)u;
+                    if (r.isAtDestination())
                     {
                         Random random = new Random();
                         Vector3 target = graph.findNearestVertex(new Vector3((float)(random.NextDouble() * 15 - 7.5), 0.0f, (float)(random.NextDouble() * 15 - 7.5)));
-                        r.setTarget(target, graph);
+                        r.setPathfindingTarget(target, graph);
                         Console.WriteLine("No. of waypoints: " + r.route.Count());
                     }
                 }
