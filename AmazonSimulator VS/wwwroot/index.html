@@ -10,7 +10,8 @@
 
 
     <script>
-        function parseCommand(input = "") {
+        function parseCommand(input = "")
+        {
             return JSON.parse(input);
         }
 
@@ -22,7 +23,8 @@
 
             var worldObjects = {};
 
-            function init() {
+            function init()
+            {
 
                 // Camera & controls
                 camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
@@ -68,17 +70,34 @@
             }
 
             // Fits and scales renderer to viewport
-            function onWindowResize() {
+            function onWindowResize()
+            {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
             // Animation loop
-            function animate() {
+            function animate()
+            {
                 requestAnimationFrame(animate);
                 cameraControls.update();
                 renderer.render(scene, camera);
+            }
+
+            function createRobotMesh()
+            {
+                return new THREE.Mesh(
+                    new THREE.BoxGeometry(0.9, 0.3, 0.9),
+                    new THREE.MeshFaceMaterial([
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }),     //TOP
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }),  //BOTTOM
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //FRONT
+                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //BACK
+                    ])
+                );
             }
 
             // Create websocket
@@ -88,20 +107,15 @@
             exampleSocket.onmessage = function (event) {
                 var command = parseCommand(event.data);
 
-                if (command.command == "update") {
-                    if (Object.keys(worldObjects).indexOf(command.parameters.guid) < 0) {
-                        if (command.parameters.type == "robot") {
-                            var geometry = new THREE.BoxGeometry(0.9, 0.3, 0.9);
-                            var cubeMaterials = [
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }), //LEFT
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }), //RIGHT
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }), //TOP
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }), //BOTTOM
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }), //FRONT
-                                new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }), //BACK
-                            ];
-                            var material = new THREE.MeshFaceMaterial(cubeMaterials);
-                            var robot = new THREE.Mesh(geometry, material);
+                console.log(JSON.stringify(command));
+
+                if (command.command == "update")
+                {
+                    if (Object.keys(worldObjects).indexOf(command.parameters.guid) < 0)
+                    {   // If object's GUID was not found in worldObjects, we must first create a new representation of this object
+                        if (command.parameters.type == "robot")
+                        {
+                            var robot = createRobotMesh();
 
                             robot.position.y = 0.15;
 

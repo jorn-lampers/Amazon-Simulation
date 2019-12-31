@@ -15,45 +15,52 @@ namespace Models {
         public World() {
             PathfindingEntity r = CreateRobot(0,0,0);
 
-            Vector3 sw = new Vector3(-10.0f, 0.0f, -10.0f);
-            Vector3 nw = new Vector3(-10.0f, 0.0f, 10.0f);
-            Vector3 se = new Vector3(10.0f, 0.0f, -10.0f);
-            Vector3 ne = new Vector3(10.0f, 0.0f, 10.0f);
-            Vector3 c = new Vector3(0.0f, 0.0f, 0.0f);
+            Vector3 A = new Vector3(-6.5f, 0.0f, 15.0f);
+            Vector3 B = new Vector3(+0.0f, 0.0f, 15.0f);
+            Vector3 C = new Vector3(+6.5f, 0.0f, 15.0f);
 
-            Edge n = new Edge(nw, ne);
-            Edge e = new Edge(ne, se);
-            Edge s = new Edge(se, sw);
-            Edge w = new Edge(nw, sw);
+            Vector3 D = new Vector3(-6.5f, 0.0f, 10.0f);
+            Vector3 E = new Vector3(+0.0f, 0.0f, 10.0f);
+            Vector3 F = new Vector3(+6.5f, 0.0f, 10.0f);
 
-            Edge csw = new Edge(sw, c);
-            Edge cnw = new Edge(nw, c);
-            Edge cse = new Edge(se, c);
-            Edge cne = new Edge(ne, c);
+            Vector3 G = new Vector3(-6.5f, 0.0f, 5.0f);
+            Vector3 H = new Vector3(+0.0f, 0.0f, 5.0f);
+            Vector3 I = new Vector3(+6.5f, 0.0f, 5.0f);
 
+            Vector3 J = new Vector3(-6.5f, 0.0f, 0.0f);
+            Vector3 K = new Vector3(+0.0f, 0.0f, 0.0f);
+            Vector3 L = new Vector3(+6.5f, 0.0f, 0.0f);
 
-            List<Vector3> vertices = new List<Vector3>();
-            vertices.Add(sw);
-            vertices.Add(se);
-            vertices.Add(nw);
-            vertices.Add(ne);
-            vertices.Add(c);
+            Edge AB = new Edge(A, B);
+            Edge BC = new Edge(B, C);
 
-            List<Edge> edges = new List<Edge>();
-            edges.Add(n);
-            //edges.Add(e);
-            edges.Add(s);
-            edges.Add(w);
+            Edge BE = new Edge(B, E);
+            Edge DE = new Edge(D, E);
 
-            //edges.Add(csw);
-            //edges.Add(cnw);
-            //edges.Add(cse);
-            edges.Add(cne);
+            Edge EF = new Edge(E, F);
+            Edge EH = new Edge(E, H);
+
+            Edge GH = new Edge(G, H);
+            Edge HI = new Edge(H, I);
+
+            Edge HK = new Edge(H, K);
+            Edge JK = new Edge(J, K);
+            Edge KL = new Edge(K, L);
+
+            List<Vector3> vertices = new List<Vector3>()
+            {
+                A, B, C, D, E, F, G, H, I, J, K, L
+            };
+
+            List<Edge> edges = new List<Edge>()
+            {
+                AB, BC, BE, DE, EF, EH, GH, HI, HK, JK, KL
+            };
+
 
             graph = new Graph(vertices, edges);
-
             //r.Move(4.6, 0, 13);
-            r.setPathfindingTarget(nw, graph);
+            r.setPathfindingTarget(E, graph);
         }
 
         private PathfindingEntity CreateRobot(float x, float y, float z)
@@ -96,7 +103,8 @@ namespace Models {
                     if (r.isAtDestination())
                     {
                         Random random = new Random();
-                        Vector3 target = graph.findNearestVertex(new Vector3((float)(random.NextDouble() * 15 - 7.5), 0.0f, (float)(random.NextDouble() * 15 - 7.5)));
+                        Vector3 target = graph.vertices[random.Next(0, graph.vertices.Count - 1)];
+
                         r.setPathfindingTarget(target, graph);
                         Console.WriteLine("No. of waypoints: " + r.route.Count());
                     }

@@ -43,6 +43,8 @@ namespace Models
         private List<Vector3> _vertices;
         private List<Edge> _edges;
 
+        public List<Vector3> vertices { get { return _vertices; } }
+
         public Graph(List<Vector3> vertices, List<Edge> edges)
         {
             this._vertices = vertices;
@@ -88,14 +90,14 @@ namespace Models
         /// <param name="source">The source node to calculate distances from.</param>
         /// <param name="destination">The target node to calculate distances to.</param>
         /// <returns>A map containing distances from key node to source node and a previous node if applicable.</returns>
-        public Dictionary<Vector3, Tuple<double, Vector3>> dijkstraDists(Vector3 source, Vector3 destination)
+        public static Dictionary<Vector3, Tuple<double, Vector3>> DijkstraDistances(Graph graph, Vector3 source, Vector3 destination)
         {
             Dictionary<Vector3, double> dist = new Dictionary<Vector3, double>();
             Dictionary<Vector3, Vector3> prev = new Dictionary<Vector3, Vector3>();
 
             List<Vector3> unvisited = new List<Vector3>();
 
-            foreach (Vector3 v in _vertices)
+            foreach (Vector3 v in graph.vertices)
             {
                 dist[v] = Double.MaxValue;
                 unvisited.Add(v);
@@ -106,7 +108,7 @@ namespace Models
             unvisited.Remove(source);
 
             // Find distances to nodes adjacent to source node
-            foreach(Vector3 a in findAdjacentNodes(source))
+            foreach(Vector3 a in graph.findAdjacentNodes(source))
             {
                 if ((a-source).Length() < dist[a])
                 {
@@ -121,7 +123,7 @@ namespace Models
 
                 Vector3 current = unvisited[0];
                 unvisited.Remove(current);
-                foreach (Vector3 a in findAdjacentNodes(current))
+                foreach (Vector3 a in graph.findAdjacentNodes(current))
                 {
                     if (!unvisited.Contains(a)) continue; // No need to update nodes that have already been visited
                     double nDist = dist[current] + (a-current).Length();
@@ -148,9 +150,9 @@ namespace Models
         /// <param name="source">The starting node.</param>
         /// <param name="destination">The target node.</param>
         /// <returns>A list of vertices representing the shortest path from passed Source Node to Target Node.</returns>
-        public List<Vector3> dijkstraShortestPath(Vector3 source, Vector3 destination)
+        public static List<Vector3> DijkstraShortestPath(Graph graph, Vector3 source, Vector3 destination)
         {
-            Dictionary<Vector3, Tuple<double, Vector3>> data = dijkstraDists(source, destination);
+            Dictionary<Vector3, Tuple<double, Vector3>> data = DijkstraDistances(graph, source, destination);
 
             List<Vector3> path = new List<Vector3>();
             path.Add(destination);

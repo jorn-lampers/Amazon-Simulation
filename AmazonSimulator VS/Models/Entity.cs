@@ -70,9 +70,9 @@ namespace Models
 
         public virtual bool Update(int tick)
         {
-            if (needsUpdate)
+            if (this.needsUpdate)
             {
-                needsUpdate = false;
+                this.needsUpdate = false;
                 return true;
             }
             return false;

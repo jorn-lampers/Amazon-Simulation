@@ -26,7 +26,7 @@ namespace Models {
             if (!this.position.Equals(nearest)) this._route.Add(nearest); 
 
             // Find the rest of the waypoints used for traversing Graph 'g'
-            this._route.AddRange(g.dijkstraShortestPath(nearest, t));
+            this._route.AddRange(Graph.DijkstraShortestPath(g, nearest, t));
         }
 
         public Vector3 getCurrentWaypoint()
