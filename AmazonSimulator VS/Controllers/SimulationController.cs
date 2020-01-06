@@ -44,6 +44,22 @@ namespace Controllers {
             running = true;
 
             while(running) {
+                foreach (ObservingClient client in views)
+                {
+                    ViewCommand command;
+                    while ((command = client.cv.nextCommand()) != null)
+                    {
+                        try
+                        {
+                            command.Execute(w); // Execute pending client commands with failsave
+                        } catch (Exception e)
+                        {
+                            Console.WriteLine(e.ToString());
+                            Console.WriteLine("Failed to execute command sent by Client: {0} ", command);
+                        }
+                    }
+                }
+
                 w.Update(tickTime);
                 Thread.Sleep(tickTime);
             }

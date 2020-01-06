@@ -11,9 +11,21 @@ namespace Models {
         private List<IObserver<Command>> observers = new List<IObserver<Command>>();
 
         private Graph graph;
-        
+        Target tr = new Target(0, 0, 0);
+
         public World() {
-            PathfindingEntity r = CreateRobot(0,0,0);
+            worldObjects.Add(tr);
+
+            Robot r = CreateRobot(0,0,0);
+
+            CreateStoragePlot(-4f, 0.01f, 2.5f, 5f, 2f);
+            CreateStoragePlot(+4f, 0.01f, 2.5f, 5f, 2f);
+
+            CreateStoragePlot(-4f, 0.01f, 7.5f, 5f, 2f);
+            CreateStoragePlot(+4f, 0.01f, 7.5f, 5f, 2f);
+
+            CreateStoragePlot(-4f, 0.01f, 12.5f, 5f, 2f);
+            CreateStoragePlot(+4f, 0.01f, 12.5f, 5f, 2f);
 
             Vector3 A = new Vector3(-6.5f, 0.0f, 15.0f);
             Vector3 B = new Vector3(+0.0f, 0.0f, 15.0f);
@@ -57,17 +69,32 @@ namespace Models {
                 AB, BC, BE, DE, EF, EH, GH, HI, HK, JK, KL
             };
 
-
             graph = new Graph(vertices, edges);
-            //r.Move(4.6, 0, 13);
-            r.setPathfindingTarget(E, graph);
+
+
+            Shelf s = CreateShelf(0.0f, 0.0f, 0.0f);
+            r.attachShelf(s);
         }
 
-        private PathfindingEntity CreateRobot(float x, float y, float z)
+        public Robot CreateRobot(float x, float y, float z)
         {
             Robot r = new Robot(x,y,z,0,0,0);
             worldObjects.Add(r);
             return r;
+        }
+
+        public StoragePlot CreateStoragePlot(float x, float y, float z, float length, float width)
+        {
+            StoragePlot p = new StoragePlot(length, width, x, y, z, 0, 0, 0);
+            worldObjects.Add(p);
+            return p;
+        }
+
+        public Shelf CreateShelf(float x, float y, float z)
+        {
+            Shelf s = new Shelf(x, y, z);
+            worldObjects.Add(s);
+            return s;
         }
 
         public IDisposable Subscribe(IObserver<Command> observer)
@@ -78,6 +105,11 @@ namespace Models {
                 SendCreationCommandsToObserver(observer);
             }
             return new Unsubscriber<Command>(observers, observer);
+        }
+
+        public List<Entity> GetObjects()
+        {
+            return this.worldObjects;
         }
 
         private void SendCommandToObservers(Command c) {
@@ -92,6 +124,7 @@ namespace Models {
             }
         }
 
+
         public bool Update(int tick)
         {
             for(int i = 0; i < worldObjects.Count; i++) {
@@ -104,9 +137,9 @@ namespace Models {
                     {
                         Random random = new Random();
                         Vector3 target = graph.vertices[random.Next(0, graph.vertices.Count - 1)];
+                        tr.Move(target);
 
                         r.setPathfindingTarget(target, graph);
-                        Console.WriteLine("No. of waypoints: " + r.route.Count());
                     }
                 }
 

@@ -58,7 +58,7 @@ namespace Models {
 
             if (this.position.Equals(getDestinationWaypoint()))
             {   // Entity has reached its final pathfinding waypoint
-                Console.WriteLine("Robot has reached its final destination.");
+                //Console.WriteLine("Robot has reached its final destination.");
                 return base.Update(tick);
             }
             else
@@ -73,7 +73,7 @@ namespace Models {
 
                 if (target.Equals(this.position))
                 {   // Entity has reached its destination waypoint
-                    Console.WriteLine("Entity has reached its final destination.");
+                    //Console.WriteLine("Entity has reached its final destination.");
                     return base.Update(tick);
                 }
 
