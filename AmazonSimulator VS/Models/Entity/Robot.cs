@@ -19,12 +19,22 @@ namespace Models
 
         }
 
-        public override bool Update(int tick)
+        public override bool Tick(int tick)
         {
-            bool updateRequired = base.Update(tick);
-            if (updateRequired && _shelf != null) _shelf.Move(this.position + new System.Numerics.Vector3(0.0f, 0.35f, 0.0f));
+            base.Tick(tick);
+            if (_shelf != null) _shelf.Move(this.position + new System.Numerics.Vector3(0.0f, 0.35f, 0.0f));
 
-            return updateRequired;
+            return needsUpdate;
+        }
+
+        internal Shelf getCurrentShelf()
+        {
+            return _shelf;
+        }
+
+        internal void detachShelf()
+        {
+            this._shelf = null;
         }
     }
 }

@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
-using Controllers;
+﻿using Controllers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Net.WebSockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Views;
 
 namespace AmazonSimulator_VS
@@ -54,19 +52,28 @@ namespace AmazonSimulator_VS
                 ContentTypeProvider = provider
             });
 
-            app.UseWebSockets();
+            WebSocketOptions options = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromMilliseconds(500),
+                ReceiveBufferSize = 4 * 1024
+            };
+
+            app.UseWebSockets(options);
             app.Use(async (context, next) =>
             {
                 if (context.Request.Path == "/connect_client")
                 {
                     if (context.WebSockets.IsWebSocketRequest)
                     {
+                        Console.WriteLine("Accepting Websocket...");
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
-                        ClientView cs = new ClientView(webSocket);
-                        simulationController.AddView(cs);
-                        await cs.StartReceiving();
-                        simulationController.RemoveView(cs);
+                        ClientView clientView = new ClientView(webSocket);
+                        simulationController.AddView(clientView);
+
+                        clientView.Run();
+                        
+                        simulationController.RemoveView(clientView);
                     }
                     else
                     {
@@ -79,6 +86,8 @@ namespace AmazonSimulator_VS
                 }
 
             });
+
+            
 
             if (env.IsDevelopment())
             {

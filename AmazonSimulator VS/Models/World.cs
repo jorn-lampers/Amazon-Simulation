@@ -5,27 +5,29 @@ using System.Numerics;
 using Controllers;
 
 namespace Models {
-    public class World : IObservable<Command>, IUpdatable
+    public class World : IObservable<UICommand>, IUpdatable
     {
         private List<Entity> worldObjects = new List<Entity>();
-        private List<IObserver<Command>> observers = new List<IObserver<Command>>();
+        private List<IObserver<UICommand>> observers = new List<IObserver<UICommand>>();
 
-        private Graph graph;
-        Target tr = new Target(0, 0, 0);
+        private Graph robotPathfindingGraph;
+        public Target tr = new Target(0, 0, 0);
+
+        public Graph RobotGraph { get => robotPathfindingGraph; }
 
         public World() {
             worldObjects.Add(tr);
 
             Robot r = CreateRobot(0,0,0);
 
-            CreateStoragePlot(-4f, 0.01f, 2.5f, 5f, 2f);
-            CreateStoragePlot(+4f, 0.01f, 2.5f, 5f, 2f);
+            CreateStoragePlot(-4f, 0.01f, 2.5f, 5, 2);
+            CreateStoragePlot(+4f, 0.01f, 2.5f, 5, 2);
 
-            CreateStoragePlot(-4f, 0.01f, 7.5f, 5f, 2f);
-            CreateStoragePlot(+4f, 0.01f, 7.5f, 5f, 2f);
+            CreateStoragePlot(-4f, 0.01f, 7.5f, 5, 2);
+            CreateStoragePlot(+4f, 0.01f, 7.5f, 5, 2);
 
-            CreateStoragePlot(-4f, 0.01f, 12.5f, 5f, 2f);
-            CreateStoragePlot(+4f, 0.01f, 12.5f, 5f, 2f);
+            CreateStoragePlot(-4f, 0.01f, 12.5f, 5, 2);
+            CreateStoragePlot(+4f, 0.01f, 12.5f, 5, 2);
 
             Vector3 A = new Vector3(-6.5f, 0.0f, 15.0f);
             Vector3 B = new Vector3(+0.0f, 0.0f, 15.0f);
@@ -69,11 +71,32 @@ namespace Models {
                 AB, BC, BE, DE, EF, EH, GH, HI, HK, JK, KL
             };
 
-            graph = new Graph(vertices, edges);
+            robotPathfindingGraph = new Graph(vertices, edges);
+
+            foreach (StoragePlot p in GetObjectsOfType<StoragePlot>())
+                robotPathfindingGraph.IntegrateVerticesToNearestEdge(p.StoragePositionsInWorld);
+
+            worldObjects.Add(new GraphDisplay(robotPathfindingGraph));
 
 
             Shelf s = CreateShelf(0.0f, 0.0f, 0.0f);
             r.attachShelf(s);
+        }
+
+        internal void SendUpdate()
+        {
+            int numUpdates = 0;
+            int numEntities = worldObjects.Count;
+
+            foreach (Entity e in worldObjects)
+            {
+                if (e.NeedsUpdate())
+                {
+                    SendCommandToObservers(new UpdateModel3DCommand(e));
+                    numUpdates++;
+                    e.needsUpdate = false;
+                }
+            }
         }
 
         public Robot CreateRobot(float x, float y, float z)
@@ -83,7 +106,7 @@ namespace Models {
             return r;
         }
 
-        public StoragePlot CreateStoragePlot(float x, float y, float z, float length, float width)
+        public StoragePlot CreateStoragePlot(float x, float y, float z, int length, int width)
         {
             StoragePlot p = new StoragePlot(length, width, x, y, z, 0, 0, 0);
             worldObjects.Add(p);
@@ -97,14 +120,14 @@ namespace Models {
             return s;
         }
 
-        public IDisposable Subscribe(IObserver<Command> observer)
+        public IDisposable Subscribe(IObserver<UICommand> observer)
         {
             if (!observers.Contains(observer)) {
                 observers.Add(observer);
 
                 SendCreationCommandsToObserver(observer);
             }
-            return new Unsubscriber<Command>(observers, observer);
+            return new Unsubscriber<UICommand>(observers, observer);
         }
 
         public List<Entity> GetObjects()
@@ -112,25 +135,44 @@ namespace Models {
             return this.worldObjects;
         }
 
-        private void SendCommandToObservers(Command c) {
+        public List<T> GetObjectsOfType<T>() where T : Entity
+        {
+            List<T> obs = new List<T>();
+
+            foreach (Entity e in GetObjects())
+                if (e is T) obs.Add(e as T);
+
+            return obs;
+        }
+
+        private void SendCommandToObservers(UICommand c) {
             for(int i = 0; i < this.observers.Count; i++) {
                 this.observers[i].OnNext(c);
             }
         }
 
-        private void SendCreationCommandsToObserver(IObserver<Command> obs) {
+        private void SendCreationCommandsToObserver(IObserver<UICommand> obs) {
             foreach(Entity m3d in worldObjects) {
                 obs.OnNext(new UpdateModel3DCommand(m3d));
             }
         }
 
-
-        public bool Update(int tick)
+        public bool Tick(int tick)
         {
-            for(int i = 0; i < worldObjects.Count; i++) {
-                Entity u = worldObjects[i];
+            for(int i = 0; i < worldObjects.Count; i++) worldObjects[i].Tick(tick);
+            
+            return true;
+        }
 
-                if(u is PathfindingEntity)
+        /*
+        public bool Tick(int tick)
+        {
+            for (int i = 0; i < worldObjects.Count; i++)
+            {
+                Entity u = worldObjects[i];
+                u.Tick(tick);
+
+                if (u is PathfindingEntity)
                 {
                     PathfindingEntity r = (PathfindingEntity)u;
                     if (r.isAtDestination())
@@ -142,17 +184,17 @@ namespace Models {
                         r.setPathfindingTarget(target, graph);
                     }
                 }
-
-                if(u is IUpdatable) {
-                    bool needsCommand = ((IUpdatable)u).Update(tick);
-
-                    if(needsCommand) {
-                        SendCommandToObservers(new UpdateModel3DCommand(u));
-                    }
-                }
             }
 
             return true;
+        }
+        */
+        public bool NeedsUpdate()
+        {   // If any child object needs an update, so does the world
+            foreach (IUpdatable u in worldObjects.Where(e => e is IUpdatable).Select(e => e as IUpdatable))
+                if (u.NeedsUpdate()) return true;
+
+            return false;
         }
     }
 

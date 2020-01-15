@@ -68,14 +68,14 @@ namespace Models
             needsUpdate = true;
         }
 
-        public virtual bool Update(int tick)
+        public virtual bool Tick(int tick)
         {
-            if (this.needsUpdate)
-            {
-                this.needsUpdate = false;
-                return true;
-            }
-            return false;
+            return this.needsUpdate;
+        }
+
+        public bool NeedsUpdate()
+        {
+            return needsUpdate;
         }
     }
 }

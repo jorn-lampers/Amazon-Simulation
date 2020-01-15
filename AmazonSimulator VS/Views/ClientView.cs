@@ -6,68 +6,111 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using System.Text;
 using Controllers;
+using Newtonsoft.Json.Linq;
 
 namespace Views
 {
-    public class ClientView : IObserver<Command>
+    public struct ClientSettings
     {
+        public int UpdateIntervalInMilliseconds;
+
+        public static ClientSettings CreateDefault()
+        {
+            return new ClientSettings
+            {
+                UpdateIntervalInMilliseconds = 10
+            };
+        }
+    }
+    public class ClientView : IObserver<UICommand>
+    {
+        private ClientSettings settings;
+
+        private Boolean abortRequested;
         private WebSocket socket;
-        private Queue<ViewCommand> viewCommands;
+
+        private Queue<ServerCommand> commandsIn;
+        private Queue<UICommand> commandsOut;
+
+        private Dictionary<Guid, ICommandHandle> awaitingResponse;
 
         public ClientView(WebSocket socket)
         {
+            settings = ClientSettings.CreateDefault();
+
+            abortRequested = false;
             this.socket = socket;
-            this.viewCommands = new Queue<ViewCommand>();
+
+            this.commandsIn = new Queue<ServerCommand>();
+            this.commandsOut = new Queue<UICommand>();
+
+            this.awaitingResponse = new Dictionary<Guid, ICommandHandle>();
         }
 
-        public ViewCommand nextCommand()
+        public ServerCommand nextCommandIn()
         {
-            if (this.viewCommands.Count > 0) return viewCommands.Dequeue();
+            if (this.commandsIn.Count > 0) return commandsIn.Dequeue();
             else return null;
         }
 
-        public async Task StartReceiving()
+        private Command nextCommandOut()
+        {
+            if (this.commandsOut.Count > 0) return commandsOut.Dequeue();
+            else return null;
+        }
+
+        public void Run()
         {
             var buffer = new byte[1024 * 4];
 
-            Console.WriteLine("ClientView connection started");
+            Console.WriteLine("ClientView started. ({0})", socket.SubProtocol);
 
-            WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            while (!result.CloseStatus.HasValue) // As long as client hasn't announced closing of stream ...
-            {   // ... handle User-input sent by view
-                string input = Encoding.UTF8.GetString(buffer);
-                ViewCommand viewCommand = null;
-                try
-                {   // Input from view could be malformed due to various reasons
-                    viewCommand = ViewCommand.Parse(input);
-                } catch (Exception ex)
-                {   // Log failed attempts to parse malformed ViewCommands
-                    Console.WriteLine("Received a malformed command from ClientView: '{0}'", input);
-                } finally
-                {   // Only enqueue the command if it was parsed successfully
-                    if (viewCommand != null) viewCommands.Enqueue(viewCommand);
+            ServerCommand commandIn;
+            Task<WebSocketReceiveResult> receiveTask = socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            
+            while (socket.State == WebSocketState.Open)
+            { 
+                UICommand commandOut;
+                lock(commandsOut) while (commandsOut.TryDequeue(out commandOut)) SendMessage(commandOut.ToJson());
+
+                if (receiveTask.IsCompleted)
+                {
+                    commandIn = CommandParser.Parse(Encoding.UTF8.GetString(buffer).Trim('\0'));
+                    commandsIn.Enqueue(commandIn);
+                    buffer = new byte[1024 * 4];
+
+                    receiveTask.Dispose();
+                    receiveTask = socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                 }
 
-                result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                Thread.Sleep(settings.UpdateIntervalInMilliseconds);
             }
-
-            // ClientView requested abort
-            Console.WriteLine("ClientView has disconnected");
-
-            await socket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+            try
+            {
+                socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                Console.WriteLine("Closed websocket.");
+            } catch (WebSocketException ex)
+            {
+                Console.WriteLine("Could not close websocket! Was it already closed? {0}", ex.Message);
+            }
         }
 
-        private async void SendMessage(string message) {
+        private bool SendMessage(string message)
+        {
             byte[] buffer = Encoding.UTF8.GetBytes(message);
-            try {
-                await socket.SendAsync(new ArraySegment<byte>(buffer, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
-            } catch(Exception e) {
-                Console.WriteLine("Error while sending information to client, probably a Socket disconnect");
+            try
+            {
+                lock(socket)
+                {
+                    socket.SendAsync(new ArraySegment<byte>(buffer, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                return true;
             }
-        }
-
-        public void SendCommand(Command c) {
-            SendMessage(c.ToJson());
+            catch (Exception e)
+            {
+                Console.WriteLine("Error while sending information to client, probably a Socket disconnect {0}", e);
+                return false;
+            }
         }
 
         public void OnCompleted()
@@ -80,9 +123,23 @@ namespace Views
             throw new NotImplementedException();
         }
 
-        public void OnNext(Command value)
+        public void OnNext(UICommand value)
         {
-            SendCommand(value);
+            lock(commandsOut) commandsOut.Enqueue(value);
+        }
+
+        public CommandHandle<T> OnNext<T>(T command) where T : UICommand
+        {
+            CommandHandle<T> handle = new CommandHandle<T>(command);
+            awaitingResponse.Add(command.id, handle);
+            OnNext(command as UICommand);
+            
+            return handle;
+        }
+
+        internal void Abort()
+        {
+            socket.Abort();
         }
     }
 }

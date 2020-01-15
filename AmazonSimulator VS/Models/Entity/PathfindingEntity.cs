@@ -52,14 +52,14 @@ namespace Models {
             return this.getDestinationWaypoint().Equals(this.position);
         }
 
-        public override bool Update(int tick)
+        public override bool Tick(int tick)
         {
             Vector3 target = this.getCurrentWaypoint();
 
             if (this.position.Equals(getDestinationWaypoint()))
             {   // Entity has reached its final pathfinding waypoint
                 //Console.WriteLine("Robot has reached its final destination.");
-                return base.Update(tick);
+                return needsUpdate;
             }
             else
             {
@@ -74,7 +74,7 @@ namespace Models {
                 if (target.Equals(this.position))
                 {   // Entity has reached its destination waypoint
                     //Console.WriteLine("Entity has reached its final destination.");
-                    return base.Update(tick);
+                    return needsUpdate;
                 }
 
                 // Move entity over the vector spanned between target position and current position with length == distance
@@ -82,7 +82,7 @@ namespace Models {
             }
 
             // Base class (Entity) determines whether or not a gfx update will be required
-            return base.Update(tick);
+            return needsUpdate;
         }
 
     }

@@ -2,78 +2,196 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Reflection;
+using System.Threading.Tasks;
 using Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Controllers {
 
-    public abstract class Command {
+    public interface ICommandHandle : IObservable<ICommandResponse>
+    {
+        void OnResponseReceived(ICommandResponse response);
+    }
 
-        protected string type;
+    public interface ICommandResponse
+    {
+        Guid GetCommandID();
+        bool IsFinalResponse();
+    }
+
+    public class CommandHandle<T> : ICommandHandle where T: UICommand
+    {
+        private List<IObserver<ICommandResponse>> _observers;
+
+        private T _command;
+        private bool _sent;
+        private Task _timeOutTask;
+
+        public T Command { get => _command; }
+        public bool IsCommandSent { get => _sent; }
+
+        public CommandHandle(T command)
+        {
+            this._command = command;
+            this._sent = false;
+        }
+
+        public void OnResponseReceived(ICommandResponse response)
+        {
+            _observers.ForEach(o => o.OnNext(response));
+
+            if(response.IsFinalResponse())
+                _observers.ForEach(o => o.OnCompleted());
+        }
+
+        public async Task TimeOutAfter(TimeSpan timeout)
+        {
+            _timeOutTask = new Task(() =>
+            {
+                _observers.ForEach(o => o.OnError(new TimeoutException("CommandResponse timed out after " + timeout.TotalSeconds + " ms!")));
+            });
+            await _timeOutTask;
+        }
+
+        public IDisposable Subscribe(IObserver<ICommandResponse> observer)
+        {
+            _observers.Add(observer);
+            return new Unsubscriber<ICommandResponse>(this._observers, observer);
+        }
+    }
+
+    public abstract class Command
+    {
+        public Guid id;
+        public string type { get { return this.GetType().Name; } }
         protected Object parameters;
 
-        public Command(string type, Object parameters) {
-            this.type = type;
+        public Command()
+        {
+            this.id = Guid.NewGuid();
+        }
+
+        public Command(Object parameters) : this() {
             this.parameters = parameters;
         }
 
         public string ToJson() {
             return JsonConvert.SerializeObject(new {
+                id = id,
                 command = type,
                 parameters = parameters
             });
         }
     }
 
-    public abstract class Model3DCommand : Command
+    public class CommandResponse<T> : ServerCommand, ICommandResponse where T : UICommand
     {
-        public Model3DCommand(string type, Entity parameters) : base(type, parameters) {
+        private T _command;
+
+        public Command Command { get; }
+
+        public override void Execute(World model)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Guid GetCommandID()
+        {
+            return _command.id;
+        }
+
+        public bool IsFinalResponse()
+        {
+            throw new NotImplementedException();
         }
     }
 
-    /// <summary>
-    /// Base class of Commands sent by ClientView to Server (SimulationController)
-    /// </summary>
-    public class ViewCommand : Command
+    public abstract class UICommand : Command
     {
-        public ViewCommand(string type, Object parameters) : base(type, parameters)
-        {
-        }
+        public UICommand(Object parameters) : base(parameters) {}
+    }
 
-        public static ViewCommand Parse(string json)
-        {
-            ViewCommand c = JsonConvert.DeserializeObject<ViewCommand>(json);
-
-            switch(c.type)
-            {
-                case "TestCommand": return JsonConvert.DeserializeObject<TestCommand>(json);
-                default: throw new Exception("Unknown command type: '" + c.type + "'");
-            }
-        }
-
-        public virtual void Execute(World model)
-        {
-            Console.WriteLine("Execution of command requested: " + JsonConvert.SerializeObject(this));
-        }
+    public abstract class Model3DCommand : UICommand
+    {
+        public Model3DCommand(Entity parameters) : base(parameters) {}
     }
 
     public class UpdateModel3DCommand : Model3DCommand
     {
-        public UpdateModel3DCommand(Entity parameters) : base("update", parameters) {
+        public UpdateModel3DCommand(Entity parameters) : base(parameters) {}
+    }
+
+    public class SimulationMetricsCommand : UICommand
+    {
+        public SimulationMetricsCommand(SimulationMetrics parameters) : base(parameters)
+        {
+
         }
     }
 
-    public class TestCommand : ViewCommand
+    public abstract class ServerCommand : Command
+    { 
+        public abstract void Execute(World model);
+    }
+
+    public class TestCommand : ServerCommand
     {
-        public TestCommand(Guid parameters) : base("test", parameters)
-        {
-            Console.WriteLine("Constructor of TestCommand was called!");
-        }
+        public Vector3 target;
 
         public override void Execute(World model)
         {
-            Console.WriteLine("Executing test command :D {0}", JsonConvert.SerializeObject(parameters));
+            Console.WriteLine("Moving to target: " + target);
+            foreach (Entity u in model.GetObjects())
+            {
+                if (u is PathfindingEntity)
+                {
+                    PathfindingEntity r = (PathfindingEntity)u;
+                    if (r.isAtDestination())
+                    {
+                        model.tr.Move(target);
+
+                        r.setPathfindingTarget(target, model.RobotGraph);
+                    }
+                }
+            }
+        }
+    }
+
+    public class ReceiveShipmentCommand : ServerCommand
+    {
+        public int amount;
+
+        public override void Execute(World model)
+        {
+            Console.WriteLine("Executing command: {0}", this);
+        }
+    }
+
+    public class SendShipmentCommand : ServerCommand
+    {
+        public int amount = 1;
+
+        public override void Execute(World model)
+        {
+            Console.WriteLine("Executing command: {0}", this);
+            foreach(Entity u in model.GetObjects())
+            {
+                if (u is PathfindingEntity)
+                {
+                    PathfindingEntity r = (PathfindingEntity)u;
+                    if (r.isAtDestination())
+                    {
+                        Random random = new Random();
+                        Vector3 target = model.RobotGraph.vertices[random.Next(0, model.RobotGraph.vertices.Count - 1)];
+                        model.tr.Move(target);
+
+                        r.setPathfindingTarget(target, model.RobotGraph);
+                    }
+                }
+            }
         }
     }
 }

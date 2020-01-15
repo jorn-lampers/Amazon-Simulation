@@ -12,39 +12,91 @@
     <script>
         var exampleSocket;
 
+        var camera, scene, renderer;
+        var cameraControls;
+
+        var intersectedVertices = [];
+        var selectedVertex;
+        var raycaster;
+        var mouse;
+
+        var worldObjects = {};
+
         function parseCommand(input = "")
         {
             return JSON.parse(input);
         }
 
-        function sendCommand(type = "ViewCommand", args = {})
+        function sendCommand(type = "ViewCommand", args)
         {
-            var command = {};
-            command.type = type;
-            command.parameters = args;
-            exampleSocket.send(JSON.stringify(command));
+            var msg = JSON.stringify({
+                type: type,
+                parameters: args
+            });
+            console.log("Sending: " + msg);
+            exampleSocket.send(msg);
         }
 
-        window.onload = function () {
-            var camera, scene, renderer;
-            var cameraControls;
-
-            var worldObjects = {};
-
-            document.onkeydown = function(e) {
+        window.onload = function ()
+        {
+            function onKeyDown(e)
+            {
                 switch (e.key) {
                     case "t":
-                        var id = Object.keys(worldObjects)[0];
-                        sendCommand("TestCommand", id);
-                  break;
+                        var args = {};
+                        args.target = {x: selectedVertex.geometry.vertices[0].x, y: selectedVertex.geometry.vertices[0].y, z: selectedVertex.geometry.vertices[0].z};
+
+                        sendCommand("TestCommand", args);
+                        break;
+                    case "c":
+                        raycaster.setFromCamera(mouse, camera);
+                        var intersects = raycaster.intersectObjects(Object.values(worldObjects), true);
+                        var names = "";
+                        alert("intersects " + intersects.length);
+
+                        var groups = [];
+
+                        for (var i = 0; i < intersects.length; i++) {
+                            var group;
+                            if (intersects[i].object.name == "Vertex") {
+                                group = intersects[i].object;
+                                group.material.size = 16;
+                            }
+                            else group = intersects[i].object.parent;
+                            if (!groups.includes(group)) {
+                                groups[groups.length] = group;
+                                alert(group.name);
+                            }
+                        }
+
+                        alert("Groupcount: " + groups.length);
+                        
+                        break;
+
                 }
             };
+
+            function onMouseMove(event)
+            {    
+	            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            }
+
+            // Fits and scales renderer to viewport
+            function onWindowResize()
+            {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
 
             function init()
             {
 
                 // Camera & controls
                 camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+                raycaster = new THREE.Raycaster();
+                mouse = new THREE.Vector2();
 
                 cameraControls = new THREE.OrbitControls(camera);
 
@@ -66,6 +118,8 @@
                 document.body.appendChild(renderer.domElement);
 
                 window.addEventListener('resize', onWindowResize, false);
+                window.addEventListener('mousemove', onMouseMove, false);
+                window.addEventListener('keydown', onKeyDown, false);
 
                 // World base
                 var geometry = new THREE.PlaneGeometry(18, 46, 32);
@@ -86,166 +140,92 @@
                 scene.add(light);
             }
 
-            // Fits and scales renderer to viewport
-            function onWindowResize()
-            {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
+            function initSocket() {
+                exampleSocket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/connect_client");
+                // Define and assign function to parse and handle commands received through websocket
+                exampleSocket.onmessage = function (event) {
+                    var command = parseCommand(event.data);
+
+                    if (command.command == "UpdateModel3DCommand")
+                    {
+                        if (Object.keys(worldObjects).indexOf(command.parameters.guid) < 0)
+                        {   // If object's GUID was not found in worldObjects, we must first create a new representation of this object
+                            var group;
+                            if (command.parameters.type == "robot") {
+                                group = CreateRobot();
+                            } else if (command.parameters.type == "storage") {
+                                group = CreateStorage(command.parameters.length, command.parameters.width);
+                            } else if (command.parameters.type == "shelf") {
+                                group = CreateShelf();
+                            } else if (command.parameters.type == "graphdisplay") {
+                                group = CreateGraph(command.parameters);
+                            } else if (command.parameters.type == "target") {
+                                group = CreateRobot();
+                                group.name = "target";
+                            }
+
+                            worldObjects[command.parameters.guid] = group;
+                            scene.add(group);
+                        }
+
+                        // Fetch object designated in command
+                        var object = worldObjects[command.parameters.guid];
+
+                        // Update designated object with supplied parameters
+                        object.position.x = command.parameters.x;
+                        object.position.y = command.parameters.y;
+                        object.position.z = command.parameters.z;
+
+                        object.rotation.x = command.parameters.rotationX;
+                        object.rotation.y = command.parameters.rotationY;
+                        object.rotation.z = command.parameters.rotationZ;
+                    }
+                }   
             }
 
             // Animation loop
             function animate()
             {
                 requestAnimationFrame(animate);
+
+                raycaster.setFromCamera(mouse, camera);
+                var intersects = raycaster.intersectObjects(Object.values(worldObjects), true);
+
+                for (var i = 0; i < intersectedVertices.length; i++) intersectedVertices[i].material.size = 8;
+
+
+                var groups = [];
+
+                for (var i = 0; i < intersects.length; i++) {
+                    var group;
+                    if (intersects[i].object.name == "Vertex") {
+                        group = intersects[i].object;
+                        if (!groups.includes(group)) groups[groups.length] = group;
+                    }
+                }
+
+                
+                if (groups.length > 0) {
+                    selectedVertex = groups[0];
+                    selectedVertex.material.size = 32;
+                }
+
                 cameraControls.update();
                 renderer.render(scene, camera);
-            }
 
-            function createRobot()
-            {
-                var robot = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.9, 0.3, 0.9),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }),     //TOP
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }),  //BOTTOM
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //FRONT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //BACK
-                    ])
-                );
-
-                robot.position.y = 0.16;
-
-                var group = new THREE.Group();
-                group.add(robot);
-
-                return group;
-            }
-
-            function createShelf()
-            {
-                var shelf = new THREE.Mesh(
-                    new THREE.BoxGeometry(1.0, 2.0, 1.0),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }),     //TOP
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }),  //BOTTOM
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //FRONT
-                        new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //BACK
-                    ])
-                );
-
-                shelf.position.y = 1.0;
-
-                var group = new THREE.Group();
-                group.add(shelf);
-
-                return group;
-            }
-
-            function createStorage(length, width)
-            {
-                var bordersize = 0.15;
-                var group = new THREE.Group();
-
-                var a = new THREE.Mesh(
-                    new THREE.PlaneGeometry(width, bordersize),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
-                    ])
-                );
-                a.position.z = 0.5 * length - 0.5 * bordersize;
-                a.rotation.x = 0.5 * Math.PI;
-                group.add(a);
-
-                var b = new THREE.Mesh(
-                    new THREE.PlaneGeometry(width, bordersize),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
-                    ])
-                );
-                b.position.z = -(0.5 * length - 0.5 * bordersize);
-                b.rotation.x = 0.5 * Math.PI;
-                group.add(b);
-
-                var c = new THREE.Mesh(
-                    new THREE.PlaneGeometry(bordersize, length),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
-                    ])
-                );
-                c.position.x = 0.5 * width - 0.5 * bordersize;
-                c.rotation.x = 0.5 * Math.PI;
-                group.add(c);
-
-                var d = new THREE.Mesh(
-                    new THREE.PlaneGeometry(bordersize, length),
-                    new THREE.MeshFaceMaterial([
-                        new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
-                    ])
-                );
-                d.position.x = -(0.5 * width - 0.5 * bordersize);
-                d.rotation.x = 0.5 * Math.PI;
-                group.add(d);
-
-                return group;
-            }
-
-            // Create websocket
-            exampleSocket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/connect_client");
-
-            // Define and assign function to parse and handle commands received through websocket
-            exampleSocket.onmessage = function (event) {
-                var command = parseCommand(event.data);
-
-
-                if (command.command == "update")
-                {
-                    if (Object.keys(worldObjects).indexOf(command.parameters.guid) < 0)
-                    {   // If object's GUID was not found in worldObjects, we must first create a new representation of this object
-                        if (command.parameters.type == "robot") {
-                            var robot = createRobot();
-
-                            scene.add(robot);
-                            worldObjects[command.parameters.guid] = robot;
-
-                        } else if (command.parameters.type == "storage") {
-                            var storage = createStorage(command.parameters.length, command.parameters.width);
-
-                            scene.add(storage);
-                            worldObjects[command.parameters.guid] = storage;
-                        } else if (command.parameters.type == "shelf") {
-                            var shelf = createShelf();
-
-                            scene.add(shelf);
-                            worldObjects[command.parameters.guid] = shelf;
-                        }
-                    }
-
-                    // Fetch object designated in command
-                    var object = worldObjects[command.parameters.guid];
-
-                    // Update designated object with supplied parameters
-                    object.position.x = command.parameters.x;
-                    object.position.y = command.parameters.y;
-                    object.position.z = command.parameters.z;
-
-                    object.rotation.x = command.parameters.rotationX;
-                    object.rotation.y = command.parameters.rotationY;
-                    object.rotation.z = command.parameters.rotationZ;
-                }
+                intersectedVertices = groups;
             }
 
             init();
+            initSocket();
+
             animate();
         }
     </script>
 
     <script src="three.min.js"></script>
     <script src="OrbitControls.js"></script>
+    <script src="ModelBuilder.js"></script>
 </body>
 
 </html>

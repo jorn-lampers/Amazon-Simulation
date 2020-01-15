@@ -43,6 +43,9 @@ namespace Models
         private List<Vector3> _vertices;
         private List<Edge> _edges;
 
+        public List<Vector3> Nodes { get => _vertices; }
+        public List<Edge> Edges { get => _edges; }
+
         public List<Vector3> vertices { get { return _vertices; } }
 
         public Graph(List<Vector3> vertices, List<Edge> edges)
@@ -83,6 +86,72 @@ namespace Models
 
             return adjacents;
         }
+
+        internal void IntegrateVerticesToNearestEdge(List<Vector3> vertices)
+        {
+            List<Vector3> newPointsOnCurrentGraph = new List<Vector3>();
+            List<Edge> newEdgesOnCurrentGraph = new List<Edge>();
+
+            foreach(Vector3 vertex in vertices)
+            {
+                Vector3 nearestPoint;
+                Edge nearestEdge;
+
+                nearestEdge = Edges[0];
+                nearestPoint = FindNearestPointToPointOnEdge(nearestEdge, vertex);
+
+                // Find nearest edge and nearest point on this edge
+                foreach(Edge e in Edges)
+                {
+                    Vector3 current = FindNearestPointToPointOnEdge(e, vertex);
+                    if ((nearestPoint - vertex).Length() > (current - vertex).Length())
+                    {
+                        nearestEdge = e;
+                        nearestPoint = current;
+                    }
+                }
+
+                // Create new point on this edge
+                // Create new edge consisting of newly found point and vertex
+                Edge a = new Edge(vertex, nearestPoint);
+                Edge b = new Edge(nearestPoint, nearestEdge.a);
+                Edge c = new Edge(nearestPoint, nearestEdge.b);
+
+                // Add vertex, new point to _vertices
+                newPointsOnCurrentGraph.Add(nearestPoint);
+                newPointsOnCurrentGraph.Add(vertex);
+
+                // Add new Edge to _edges
+                newEdgesOnCurrentGraph.Add(a);
+                newEdgesOnCurrentGraph.Add(b);
+                newEdgesOnCurrentGraph.Add(c);
+            }
+
+            this._vertices.AddRange(newPointsOnCurrentGraph);
+            this._edges.AddRange(newEdgesOnCurrentGraph);
+        }
+
+        private static Vector3 FindNearestPointToPointOnEdge(Edge e, Vector3 p)
+        {
+            return NearestPointOnFiniteLine(e.a, e.b, p);
+        }
+
+        // Source: https://forum.unity.com/threads/how-do-i-find-the-closest-point-on-a-line.340058/
+        //linePnt - point the line passes through
+        //lineDir - unit vector in direction of line, either direction works
+        //pnt - the point to find nearest on line for
+        public static Vector3 NearestPointOnFiniteLine(Vector3 start, Vector3 end, Vector3 pnt)
+        {
+            var line = (end - start);
+            var len = line.Length();
+            line = Vector3.Normalize(line);
+
+            var v = pnt - start;
+            var d = Vector3.Dot(v, line);
+            d = Math.Clamp(d, 0f, len);
+            return start + line * d;
+        }
+
 
         /// <summary>
         /// Calculates inter-node distances using Dijkstra's algorithm as specified in https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
