@@ -26,7 +26,6 @@ namespace Views
     {
         private ClientSettings settings;
 
-        private Boolean abortRequested;
         private WebSocket socket;
 
         private Queue<ServerCommand> commandsIn;
@@ -38,7 +37,6 @@ namespace Views
         {
             settings = ClientSettings.CreateDefault();
 
-            abortRequested = false;
             this.socket = socket;
 
             this.commandsIn = new Queue<ServerCommand>();
@@ -128,6 +126,7 @@ namespace Views
             lock(commandsOut) commandsOut.Enqueue(value);
         }
 
+        /*
         public CommandHandle<T> OnNext<T>(T command) where T : UICommand
         {
             CommandHandle<T> handle = new CommandHandle<T>(command);
@@ -136,7 +135,7 @@ namespace Views
             
             return handle;
         }
-
+        */
         internal void Abort()
         {
             socket.Abort();

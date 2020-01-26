@@ -10,7 +10,7 @@
 
 
     <script>
-        var exampleSocket;
+        var socket;
 
         var camera, scene, renderer;
         var cameraControls;
@@ -34,7 +34,7 @@
                 parameters: args
             });
             console.log("Sending: " + msg);
-            exampleSocket.send(msg);
+            socket.send(msg);
         }
 
         window.onload = function ()
@@ -42,35 +42,14 @@
             function onKeyDown(e)
             {
                 switch (e.key) {
-                    case "t":
+                    case "m":
                         var args = {};
                         args.target = {x: selectedVertex.geometry.vertices[0].x, y: selectedVertex.geometry.vertices[0].y, z: selectedVertex.geometry.vertices[0].z};
 
                         sendCommand("TestCommand", args);
                         break;
-                    case "c":
-                        raycaster.setFromCamera(mouse, camera);
-                        var intersects = raycaster.intersectObjects(Object.values(worldObjects), true);
-                        var names = "";
-                        alert("intersects " + intersects.length);
-
-                        var groups = [];
-
-                        for (var i = 0; i < intersects.length; i++) {
-                            var group;
-                            if (intersects[i].object.name == "Vertex") {
-                                group = intersects[i].object;
-                                group.material.size = 16;
-                            }
-                            else group = intersects[i].object.parent;
-                            if (!groups.includes(group)) {
-                                groups[groups.length] = group;
-                                alert(group.name);
-                            }
-                        }
-
-                        alert("Groupcount: " + groups.length);
-                        
+                    case "t":
+                        sendCommand("ReceiveShipmentCommand", {});
                         break;
 
                 }
@@ -141,44 +120,35 @@
             }
 
             function initSocket() {
-                exampleSocket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/connect_client");
+                socket = new WebSocket("ws://" + window.location.hostname + ":" + window.location.port + "/connect_client");
                 // Define and assign function to parse and handle commands received through websocket
-                exampleSocket.onmessage = function (event) {
+                socket.onmessage = function (event) {
                     var command = parseCommand(event.data);
 
-                    if (command.command == "UpdateModel3DCommand")
-                    {
-                        if (Object.keys(worldObjects).indexOf(command.parameters.guid) < 0)
-                        {   // If object's GUID was not found in worldObjects, we must first create a new representation of this object
-                            var group;
-                            if (command.parameters.type == "robot") {
-                                group = CreateRobot();
-                            } else if (command.parameters.type == "storage") {
-                                group = CreateStorage(command.parameters.length, command.parameters.width);
-                            } else if (command.parameters.type == "shelf") {
-                                group = CreateShelf();
-                            } else if (command.parameters.type == "graphdisplay") {
-                                group = CreateGraph(command.parameters);
-                            } else if (command.parameters.type == "target") {
-                                group = CreateRobot();
-                                group.name = "target";
-                            }
-
-                            worldObjects[command.parameters.guid] = group;
+                    if (command.command == "UpdateModel3DCommand") {
+                        if (Object.keys(worldObjects).indexOf(command.parameters.Guid) < 0) {   // If object's GUID was not found in worldObjects, we must first create a new representation of this object
+                            var group = CreateEntity(command);
+                            worldObjects[command.parameters.Guid] = group;
                             scene.add(group);
                         }
 
                         // Fetch object designated in command
-                        var object = worldObjects[command.parameters.guid];
+                        var object = worldObjects[command.parameters.Guid];
+
 
                         // Update designated object with supplied parameters
-                        object.position.x = command.parameters.x;
-                        object.position.y = command.parameters.y;
-                        object.position.z = command.parameters.z;
+                        object.position.x = command.parameters.X;
+                        object.position.y = command.parameters.Y;
+                        object.position.z = command.parameters.Z;
 
-                        object.rotation.x = command.parameters.rotationX;
-                        object.rotation.y = command.parameters.rotationY;
-                        object.rotation.z = command.parameters.rotationZ;
+                        object.rotation.x = command.parameters.RotationX;
+                        object.rotation.y = command.parameters.RotationY;
+                        object.rotation.z = command.parameters.RotationZ;
+                    } else if (command.command == "DiscardModel3DCommand")
+                    {
+                        console.log(JSON.stringify(command.parameters));
+                        scene.remove(worldObjects[command.parameters]);
+                        delete worldObjects[command.parameters];
                     }
                 }   
             }
@@ -188,32 +158,8 @@
             {
                 requestAnimationFrame(animate);
 
-                raycaster.setFromCamera(mouse, camera);
-                var intersects = raycaster.intersectObjects(Object.values(worldObjects), true);
-
-                for (var i = 0; i < intersectedVertices.length; i++) intersectedVertices[i].material.size = 8;
-
-
-                var groups = [];
-
-                for (var i = 0; i < intersects.length; i++) {
-                    var group;
-                    if (intersects[i].object.name == "Vertex") {
-                        group = intersects[i].object;
-                        if (!groups.includes(group)) groups[groups.length] = group;
-                    }
-                }
-
-                
-                if (groups.length > 0) {
-                    selectedVertex = groups[0];
-                    selectedVertex.material.size = 32;
-                }
-
                 cameraControls.update();
                 renderer.render(scene, camera);
-
-                intersectedVertices = groups;
             }
 
             init();

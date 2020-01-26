@@ -20,10 +20,31 @@
     return group;
 }
 
+CreateTruck = function () {
+    var truck = new THREE.Mesh(
+        new THREE.BoxGeometry(9.0, 3.0, 3.8),
+        new THREE.MeshFaceMaterial([
+            new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
+            null,//new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
+            new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }),     //TOP
+            new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }),  //BOTTOM
+            new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //FRONT
+            new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //BACK
+        ])
+    );
+
+    truck.position.y = 1.5;
+
+    var group = new THREE.Group();
+    group.add(truck);
+    group.name = "Truck";
+
+    return group;
+}
 
 CreateShelf = function () {
     var shelf = new THREE.Mesh(
-        new THREE.BoxGeometry(1.0, 2.0, 1.0),
+        new THREE.BoxGeometry(0.95, 2.0, 0.95),
         new THREE.MeshFaceMaterial([
             new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
             new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
@@ -47,18 +68,25 @@ CreateGraph = function (graph) {
     var group = new THREE.Group();
     graph.Edges.forEach(function (edge) {
         var lineGeometry = new THREE.Geometry();
-        lineGeometry.vertices.push(new THREE.Vector3(edge.a.X, edge.a.Y, edge.a.Z));
-        lineGeometry.vertices.push(new THREE.Vector3(edge.b.X, edge.b.Y, edge.b.Z));
+        lineGeometry.vertices.push(new THREE.Vector3(edge.A.Position.X, edge.A.Position.Y, edge.A.Position.Z));
+        lineGeometry.vertices.push(new THREE.Vector3(edge.B.Position.X, edge.B.Position.Y, edge.B.Position.Z));
+
+        var mat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+
+        console.log("Width: " + edge.Width);
+
+        if (edge.Width > 0) mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
+
         var mesh = new THREE.Line(
             lineGeometry,
-            new THREE.LineBasicMaterial({ color: 0x0000ff })
+            mat
         );
         group.add(mesh);
     });
 
     graph.Nodes.forEach(function (node) {
         var dotGeometry = new THREE.Geometry();
-        dotGeometry.vertices.push(new THREE.Vector3(node.X, node.Y, node.Z));
+        dotGeometry.vertices.push(new THREE.Vector3(node.Position.X, node.Position.Y, node.Position.Z));
         var mesh = new THREE.Points(
             dotGeometry,
             new THREE.PointsMaterial({ size: 8, sizeAttenuation: false, color: 0xff0000 })
@@ -116,6 +144,26 @@ CreateStorage = function (length, width) {
     group.add(d);
     group.name = "Storage";
 
+    return group;
+}
+
+CreateEntity = function (command)
+{
+    var group;
+    if (command.parameters.Type == "robot") {
+        group = CreateRobot();
+    } else if (command.parameters.Type == "storage") {
+        group = CreateStorage(command.parameters.Length, command.parameters.Width);
+    } else if (command.parameters.Type == "shelf") {
+        group = CreateShelf();
+    } else if (command.parameters.Type == "graphdisplay") {
+        group = CreateGraph(command.parameters);
+    } else if (command.parameters.Type == "target") {
+        group = CreateRobot();
+        group.name = "target";
+    } else if (command.parameters.Type == "truck") {
+        group = CreateTruck();
+    }
     return group;
 }
 

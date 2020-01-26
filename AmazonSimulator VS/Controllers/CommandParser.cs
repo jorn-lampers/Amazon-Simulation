@@ -87,7 +87,7 @@ namespace Controllers
                     dynamic val = CommandParser.JTokenToType(parameters.SelectToken(field.Name), field.FieldType);
                     field.SetValue(command, val);
                 }
-                catch (NullReferenceException ex)
+                catch (NullReferenceException)
                 {
                     if (field.GetValue(command) == null)
                         throw new ArgumentException(String.Format("Command of type '{0}' is missing required field '{1}' in supplied parameters.", commandName, field.Name));

@@ -124,6 +124,13 @@ namespace Controllers {
         public UpdateModel3DCommand(Entity parameters) : base(parameters) {}
     }
 
+    internal class DiscardModel3DCommand : UICommand
+    {
+        public DiscardModel3DCommand(Guid parameters) : base(parameters)
+        {
+        }
+    }
+
     public class SimulationMetricsCommand : UICommand
     {
         public SimulationMetricsCommand(SimulationMetrics parameters) : base(parameters)
@@ -144,17 +151,11 @@ namespace Controllers {
         public override void Execute(World model)
         {
             Console.WriteLine("Moving to target: " + target);
-            foreach (Entity u in model.GetObjects())
+            foreach (Robot r in model.GetObjectsOfType<Robot>())
             {
-                if (u is PathfindingEntity)
+                if (r.IsAtDestination())
                 {
-                    PathfindingEntity r = (PathfindingEntity)u;
-                    if (r.isAtDestination())
-                    {
-                        model.tr.Move(target);
-
-                        r.setPathfindingTarget(target, model.RobotGraph);
-                    }
+                    r.AssignTask(new PathfinderTask(r, target, r.PathfindingGraph));
                 }
             }
         }
@@ -162,11 +163,10 @@ namespace Controllers {
 
     public class ReceiveShipmentCommand : ServerCommand
     {
-        public int amount;
-
         public override void Execute(World model)
         {
-            Console.WriteLine("Executing command: {0}", this);
+            Console.WriteLine("Receiving shipment...");
+            model.RunTask(new ReceiveShipmentTask(model));
         }
     }
 
@@ -182,13 +182,11 @@ namespace Controllers {
                 if (u is PathfindingEntity)
                 {
                     PathfindingEntity r = (PathfindingEntity)u;
-                    if (r.isAtDestination())
+                    if (r.IsAtDestination())
                     {
                         Random random = new Random();
-                        Vector3 target = model.RobotGraph.vertices[random.Next(0, model.RobotGraph.vertices.Count - 1)];
-                        model.tr.Move(target);
-
-                        r.setPathfindingTarget(target, model.RobotGraph);
+                        //Vector3 target = model.RobotGraph.Vertices[random.Next(0, model.RobotGraph.Vertices.Count - 1)];
+                        //r.SetPathfindingTarget(target, model.RobotGraph);
                     }
                 }
             }

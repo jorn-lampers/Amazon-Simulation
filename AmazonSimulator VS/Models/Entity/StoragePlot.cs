@@ -6,35 +6,57 @@ using Newtonsoft.Json;
 
 namespace Models
 {
-    public class StoragePlot : Entity
+    public class StoragePlot : Entity, ICargoCarrier
     {
         private float _length;
         private float _width;
+        private List<CargoSlot> _cargoSlots;
 
-        public float width { get { return _width; } }
-        public float length { get { return _length; } }
+        public float Width { get { return _width; } }
+        public float Length { get { return _length; } }
 
-        public StoragePlot(int width, int length, float x, float y, float z, float rotationX, float rotationY, float rotationZ) : base("storage", x, y, z, rotationX, rotationY, rotationZ)
+        public StoragePlot(EntityEnvironmentInfoProvider parent, int width, int length, float x, float y, float z, float rotationX, float rotationY, float rotationZ) : base("storage", parent, x, y, z, rotationX, rotationY, rotationZ)
         {
             this._length = length;
             this._width = width;
+            this._cargoSlots = new List<CargoSlot>();
+
+            float startX = -_width / 2 + 0.5f;
+            float startZ = -_length / 2 + 0.5f;
+
+            for (int lx = 0; lx < _width; lx++)
+                for (int lz = 0; lz < _length; lz++)
+                    this._cargoSlots.Add(
+                        new CargoSlot(this, new Vector3(startX + lx, 0, startZ + lz))
+                    );
+            
+
         }
 
-        public List<Vector3> StoragePositionsInWorld {
-            get {
-                List<Vector3> positions = new List<Vector3>();
+        public List<CargoSlot> CargoSlots => _cargoSlots;
 
-                float startX = -_width / 2 + 0.5f;
-                float startZ = -_length / 2 + 0.5f;
+        public List<CargoSlot> FreeCargoSlots => CargoSlots.Where((CargoSlot slot) => slot.IsAvailable).ToList();
 
-                for(int x = 0; x < _width; x++)
-                {
-                    for (int z = 0; z < _length; z++)
-                        positions.Add(new Vector3(this.x + startX + x, this.y, this.z + startZ + z));
-                }
+        public List<CargoSlot> OccupiedCargoSlots => CargoSlots.Where((CargoSlot slot) => !slot.IsAvailable).ToList();
 
-                return positions;
+        public bool HasFreeCargoSlots => FreeCargoSlots.Count > 0;
+
+        public bool TryAddCargo(Shelf item)
+        {
+            if(this.HasFreeCargoSlots)
+            {
+                this.FreeCargoSlots[0].SetCargo(item);
+                return true;
             }
+            return false;
+        }
+
+        public override bool Tick(int tick)
+        {
+            base.Tick(tick);
+            foreach (CargoSlot slot in _cargoSlots) slot.Tick(tick);
+
+            return needsUpdate;
         }
     }
 }
