@@ -22,13 +22,11 @@
 
         var worldObjects = {};
 
-        function parseCommand(input = "")
-        {
+        function parseCommand(input = "") {
             return JSON.parse(input);
         }
 
-        function sendCommand(type = "ViewCommand", args)
-        {
+        function sendCommand(type = "ViewCommand", args) {
             var msg = JSON.stringify({
                 type: type,
                 parameters: args
@@ -37,14 +35,12 @@
             socket.send(msg);
         }
 
-        window.onload = function ()
-        {
-            function onKeyDown(e)
-            {
+        window.onload = function () {
+            function onKeyDown(e) {
                 switch (e.key) {
                     case "m":
                         var args = {};
-                        args.target = {x: selectedVertex.geometry.vertices[0].x, y: selectedVertex.geometry.vertices[0].y, z: selectedVertex.geometry.vertices[0].z};
+                        args.target = { x: selectedVertex.geometry.vertices[0].x, y: selectedVertex.geometry.vertices[0].y, z: selectedVertex.geometry.vertices[0].z };
 
                         sendCommand("TestCommand", args);
                         break;
@@ -55,22 +51,19 @@
                 }
             };
 
-            function onMouseMove(event)
-            {    
-	            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-	            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+            function onMouseMove(event) {
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
             }
 
             // Fits and scales renderer to viewport
-            function onWindowResize()
-            {
+            function onWindowResize() {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
                 renderer.setSize(window.innerWidth, window.innerHeight);
             }
 
-            function init()
-            {
+            function init() {
 
                 // Camera & controls
                 camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
@@ -144,18 +137,16 @@
                         object.rotation.x = command.parameters.RotationX;
                         object.rotation.y = command.parameters.RotationY;
                         object.rotation.z = command.parameters.RotationZ;
-                    } else if (command.command == "DiscardModel3DCommand")
-                    {
+                    } else if (command.command == "DiscardModel3DCommand") {
                         console.log(JSON.stringify(command.parameters));
                         scene.remove(worldObjects[command.parameters]);
                         delete worldObjects[command.parameters];
                     }
-                }   
+                }
             }
 
             // Animation loop
-            function animate()
-            {
+            function animate() {
                 requestAnimationFrame(animate);
 
                 cameraControls.update();
@@ -165,12 +156,22 @@
             init();
             initSocket();
 
+            LoadModels();
+
             animate();
         }
     </script>
 
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+            crossorigin="anonymous"></script>
+
     <script src="three.min.js"></script>
     <script src="OrbitControls.js"></script>
+
+    <script src='https://mamboleoo.be/learnThree/demos/OBJLoader.js'></script>
+
+    <script src="Models.js"></script>
     <script src="ModelBuilder.js"></script>
 </body>
 

@@ -1,29 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Numerics;
-using System.Threading.Tasks;
 
 namespace Models
 {
-
-    public abstract class CollidablePathfindingEntity : PathfindingEntity, ICollidable<PolygonalFootprint>
+    public abstract class CollidablePathfindingEntity 
+        : PathfindingEntity
+        , ICollidable<PolygonalFootprint>
     {
         private PolygonalFootprint _footprint;
 
-        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
+        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ)
+            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
         {
-            this._footprint = new PolygonalFootprint(this, new List<Vector2>() { new Vector2(-0.4f, -0.4f), new Vector2(-0.4f, +0.4f), new Vector2(+0.4f, +0.4f), new Vector2(+0.4f, -0.4f) });
+            this._footprint = new PolygonalFootprint(
+                this, 
+                new List<Vector2>() {
+                    new Vector2(-0.4f, -0.4f),
+                    new Vector2(-0.4f, +0.4f),
+                    new Vector2(+0.4f, +0.4f),
+                    new Vector2(+0.4f, -0.4f)
+                }
+            );
         }
+        public PolygonalFootprint Intersectable 
+            => _footprint;
 
-        public PolygonalFootprint Intersectable => _footprint;
-
-        public bool CheckCollision(PolygonalFootprint other) => this.Intersectable.Intersects(other);
+        public bool CheckCollision(PolygonalFootprint other) 
+            => this.Intersectable.Intersects(other);
 
         public override Vector3 Move(Vector3 pos)
-        {
-            return Move(pos.X, pos.Y, pos.Z);
-        }
+            => Move(pos.X, pos.Y, pos.Z);
 
         public override Vector3 Move(float x, float y, float z)
         {

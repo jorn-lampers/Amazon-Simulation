@@ -6,61 +6,19 @@ using Geometry;
 
 namespace Models
 {
-    public class Node
-    {
-        public static implicit operator Vector3(Node n) => n.Position;
-
-        public readonly Vector3 Position;
-        public readonly float Width;
-
-        public readonly Graph Parent;
-
-        public Node(Vector3 pos, float w = 0f) { Position = pos; Width = w; }
-
-        public static IEnumerable<Edge> GetDefiningEdges(Node n, Graph g) 
-            => g.Edges.Where(edge => edge.Contains(n));
-
-        public static IEnumerable<Edge> GetImplyingEdges(Node n, Graph g)
-            => g.Edges.Where(edge => Edge.ImpliesNode(n, edge));
-
-        public static bool IsImpliedOnly(Node n, Graph g)
-            => g.Edges.Any(e => !e.Contains(n) && Edge.ImpliesNode(n, e));
-        
-        public override bool Equals(object obj) => obj is Node ? (obj as Node).Position.Equals(Position) : false;
-
-        public override int GetHashCode()
-        {
-            var hashCode = 568732793;
-            hashCode = hashCode * -1521134295 + EqualityComparer<Vector3>.Default.GetHashCode(Position);
-            return hashCode;
-        }
-    }
-
-    public class ImpliedNode : Node
-    {
-        public readonly Edge ImpliedBy;
-
-        public List<Node> Adjacents
-            => new List<Node>() { ImpliedBy.A, ImpliedBy.B };
-
-        public ImpliedNode(Vector3 pos, Edge impliedBy) : base(pos, impliedBy.Width)
-            => this.ImpliedBy = impliedBy;
-    }
-
-    public static class GraphExtensions
-    {
-        public static (Vector3 Position, float Width) NearestTo(this List<(Vector3 Position, float Width)> nodes, Vector3 p) 
-            => nodes.OrderBy(n => Vector3.Distance(n.Position, p)).FirstOrDefault();
-    }
-
     public class Graph
     {
         private List<Node> _nodes;
         private List<Edge> _edges;
 
-        public IEnumerable<Vector3> Vertices { get { return _nodes.Select((n) => n.Position); } }
-        public IReadOnlyCollection<Node> Nodes { get => _nodes.AsReadOnly(); }
-        public IReadOnlyCollection<Edge> Edges { get => _edges.AsReadOnly(); }
+        public IEnumerable<Vector3> Vertices 
+            => _nodes.Select((n) => n.Position); 
+
+        public IReadOnlyCollection<Node> Nodes 
+            => _nodes.AsReadOnly(); 
+
+        public IReadOnlyCollection<Edge> Edges 
+            => _edges.AsReadOnly(); 
 
         public Graph(List<Edge> edges)
         {
@@ -94,9 +52,9 @@ namespace Models
 
         public static ImpliedNode NearestImpliedNodeTo(Node n, Graph g)
             => new ImpliedNode(NearestColinearPointOn(n, g, out Edge edge), edge);
-        
 
-        public static Node NearestImpliedNodeTo(Vector3 v, Graph g) => new Node(Graph.NearestColinearPointOn(v, g, out Edge edge), edge.Width);
+        public static Node NearestImpliedNodeTo(Vector3 v, Graph g) 
+            => new Node(Graph.NearestColinearPointOn(v, g, out Edge edge), edge.Width);
 
         public static Vector3 NearestColinearPointOn(Vector3 v, Graph g, out Edge edgeOut)
         {
@@ -129,14 +87,6 @@ namespace Models
             }
 
             return adjacents;
-        }
-
-        public float GetEdgeWidth(Edge edge)
-        {
-            foreach (Edge e in Edges)
-                if (e.Equals(edge)) return e.Width;
-
-            return 0f;
         }
 
         public void IntegrateVerticesToNearestEdge(List<Vector3> vertices, float width = 0f)

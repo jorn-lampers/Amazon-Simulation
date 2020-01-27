@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
 namespace Models
 {
-    public class CargoSlot : IUpdatable, IOccupiable<Shelf>
+    public class CargoSlot 
+        : IUpdatable
+        , IOccupiable<Shelf>
     {
         private Vector3 _relativePosition;
         private Shelf _content;
@@ -14,24 +12,24 @@ namespace Models
 
         // IOccupiable implementation
         private IReleasable<Shelf> _occupant;
-        public Shelf Occupant => _reservedBy;
-        public bool IsOccupied => _occupant != null && !_occupant.IsReleased();
-
-        private ICargoCarrier parent;
-        public bool needsUpdate;
+        private ICargoCarrier _parent;
+        private bool _needsUpdate;
 
         public CargoSlot(ICargoCarrier parent, Vector3 posRelative)
         {
-            this.parent = parent;
+            this._parent = parent;
             this._relativePosition = posRelative;
         }
 
-        public bool IsEmpty { get => _content == null; }
-        public bool IsAvailable { get => _content == null && _reservedBy == null; }
-        public bool IsReserved { get => _reservedBy != null; }
-        public Shelf Cargo { get => _content; }
-        public Vector3 PositionAbsolute { get => parent.Position + _relativePosition; }
+        public Shelf Occupant => _reservedBy;
+        public bool IsOccupied => _occupant != null && !_occupant.IsReleased();
+        public bool IsEmpty => _content == null;
+        public bool IsAvailable => _content == null && _reservedBy == null;
+        public bool IsReserved => _reservedBy != null; 
+        public Shelf Cargo => _content; 
+        public Vector3 PositionAbsolute => _parent.Position + _relativePosition;
 
+        bool IUpdatable.NeedsUpdate() => _needsUpdate;
 
         public bool SetCargo(Shelf cargo)
         {
@@ -59,7 +57,6 @@ namespace Models
         {
             Shelf cargo = this._content;
             this._content = null;
-
             return cargo;
         }
 
@@ -68,11 +65,6 @@ namespace Models
             if (!IsEmpty) Cargo.Move(PositionAbsolute);
             return true;
         }
-
-        bool IUpdatable.NeedsUpdate()
-        {
-            throw new NotImplementedException();
-        }        
 
         public IReleasable<Shelf> Occupy(Shelf occupant)
         {

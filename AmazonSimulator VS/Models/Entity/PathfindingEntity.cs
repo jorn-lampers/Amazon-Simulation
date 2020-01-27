@@ -2,24 +2,30 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Newtonsoft.Json;
 
 namespace Models {
     public abstract class PathfindingEntity : Entity
     {
+        private List<Vector3> _route = new List<Vector3>();
+
         private float _movementSpeed;
-        List<Vector3> _route;
-        int _currentWaypoint;
+        private int _currentWaypoint;
 
-        public float MovementSpeed { get { return _movementSpeed; } }
-        public List<Vector3> Route { get { return _route; } }
-        public Vector3? Destination { get => _route.Count > 0 ? _route.Last() : Position; }
+        public float MovementSpeed 
+            => _movementSpeed;
 
-        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementSpeed = 0.35f) : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
-        {
-            this._movementSpeed = movementSpeed;
-            this._route = new List<Vector3>();
-        }
+        public List<Vector3> Route 
+            => _route; 
+
+        public Vector3? Destination
+            => _route.Count > 0 
+            ? _route.Last() 
+            : Position; 
+
+        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementSpeed = 0.35f) 
+            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
+            => this._movementSpeed = movementSpeed;
+        
 
         public void SetPathfindingTarget(Vector3 target)
         {
@@ -39,7 +45,6 @@ namespace Models {
             List<Node> dr = Graph.DijkstraShortestPath(g, firstOnGraph, lastOnGraph);
             List<Vector3> routeRight = new List<Vector3>();
 
-           
             if (!g.ImpliesNodeAt(Position)) // If current position is not present on graph ...
                 dr = dr.Prepend(new Node(Position, 0)).ToList(); // ... manually add it to the route
 
@@ -52,7 +57,6 @@ namespace Models {
                 Vector3 nOff = new Vector3(0, 0, 0);
 
                 Node a, b, c;
-
                 b = dr[i];
 
                 if (i > 0)
@@ -83,20 +87,17 @@ namespace Models {
 
                 routeRight.Add(wpAdjusted);
             }
-
             routeRight.Add(dr.Last());
 
             // Find the rest of the waypoints used for traversing Graph 'g'
             this._route.AddRange(routeRight);
-
             this._currentWaypoint = 0;
         }
 
         public Vector3 GetCurrentWaypoint(bool MaintainRight = false)
-        {
-            if (this._route.Count == 0 || _currentWaypoint == -1) return this.Position;
-            else return this._route[_currentWaypoint];
-        }
+            => (this._route.Count == 0 || _currentWaypoint == -1) 
+            ? this.Position
+            : this._route[_currentWaypoint];
 
         public Vector3 NextWaypoint()
         {
@@ -118,11 +119,9 @@ namespace Models {
         {
             Vector3 target = this.GetCurrentWaypoint();
 
-            if (this.Position.Equals(Destination)) // Entity has reached its final pathfinding waypoint
-                return needsUpdate;
-            
-            else
-            {
+            if (this.Position.Equals(Destination)) return needsUpdate; // Entity has reached its final pathfinding waypoint
+            else // Move entity proportional to its movementspeed
+            {   
                 float distance = this._movementSpeed;
                 if ((target-this.Position).Length() < this._movementSpeed)
                 {   // If Entity's distance moved this tick exceeds the distance to the next waypoint ...
@@ -134,7 +133,6 @@ namespace Models {
                 if (target.Equals(this.Position))// Entity has reached its destination waypoint, no need to move any further
                     return needsUpdate;
                 
-
                 // Move entity over the vector spanned between target position and current position with length == distance
                 Move(this.Position + Vector3.Normalize(target - this.Position) * distance);
             }
@@ -142,6 +140,5 @@ namespace Models {
             // Base class (Entity) determines whether or not a gfx update will be required
             return needsUpdate;
         }
-
     }
 }

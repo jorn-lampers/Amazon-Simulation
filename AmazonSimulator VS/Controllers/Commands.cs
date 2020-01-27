@@ -151,7 +151,7 @@ namespace Controllers {
         public override void Execute(World model)
         {
             Console.WriteLine("Moving to target: " + target);
-            foreach (Robot r in model.GetObjectsOfType<Robot>())
+            foreach (Robot r in model.ObjectsOfType<Robot>())
             {
                 if (r.IsAtDestination())
                 {
@@ -177,7 +177,7 @@ namespace Controllers {
         public override void Execute(World model)
         {
             Console.WriteLine("Executing command: {0}", this);
-            foreach(Entity u in model.GetObjects())
+            foreach(Entity u in model.Objects)
             {
                 if (u is PathfindingEntity)
                 {

@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Controllers;
 
 namespace Models
 {
-    public class World : IObservable<UICommand>, IUpdatable, EntityEnvironmentInfoProvider
+    public class World 
+        : IObservable<UICommand>
+        , IUpdatable
+        , EntityEnvironmentInfoProvider
     {
         private List<Entity> worldObjects = new List<Entity>();
         private List<IObserver<UICommand>> observers = new List<IObserver<UICommand>>();
@@ -16,11 +18,26 @@ namespace Models
         private Graph robotPathfindingGraph;
         private Graph truckPathfindingGraph;
 
-        public Graph RobotGraph { get => robotPathfindingGraph; }
-        public Graph TruckGraph { get => truckPathfindingGraph; }
+        public PointsOfInterest POI;
 
-        public Node RobotQueueStart => Graph.NearestExplicitNodeTo(POI.RobotEnterTruck, RobotGraph); 
-        public Node RobotTruckExit => Graph.NearestExplicitNodeTo(POI.RobotExitTruck, RobotGraph);
+        public List<Entity> Objects
+            => this.worldObjects;
+
+        public List<T> ObjectsOfType<T>() where T : Entity
+            => Objects.Where(e => e is T)
+            .Select(et => et as T).ToList();
+
+        public Graph RobotGraph 
+            => robotPathfindingGraph; 
+
+        public Graph TruckGraph 
+            => truckPathfindingGraph; 
+
+        public Node RobotQueueStart 
+            => Graph.NearestExplicitNodeTo(POI.RobotEnterTruck, RobotGraph); 
+
+        public Node RobotTruckExit 
+            => Graph.NearestExplicitNodeTo(POI.RobotExitTruck, RobotGraph);
 
         public struct PointsOfInterest
         {
@@ -36,29 +53,37 @@ namespace Models
             public PointsOfInterest(List<Vector3> RobotSpawns, Vector3 TruckSpawn, Vector3 TruckStop, Vector3 TruckDespawn, Vector3 RobotInteractTruck, Vector3 RobotExitTruck)
             {
                 this.RobotSpawns = RobotSpawns;
+
                 this.TruckSpawn = TruckSpawn;
                 this.TruckStop = TruckStop;
                 this.TruckDespawn = TruckDespawn;
+
                 this.RobotEnterTruck = RobotInteractTruck;
                 this.RobotExitTruck = RobotExitTruck;
             }
         }
 
-        public PointsOfInterest POI;
-
         public World()
         {
-            this._simulationTask = new EmptyTask<World>(this);
+            this._simulationTask = null;
 
             POI = new PointsOfInterest(
-                new List<Vector3>() { new Vector3(0f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(2f, 0f, 0f), new Vector3(3f, 0f, 0f), new Vector3(4f, 0f, 0f)/* */},
+
+                new List<Vector3>()
+                {
+                    new Vector3(0f, 0f, 0f),
+                    new Vector3(1f, 0f, 0f),
+                    new Vector3(2f, 0f, 0f),
+                    new Vector3(3f, 0f, 0f),
+                    new Vector3(4f, 0f, 0f)
+                },
 
                 new Vector3(-50f, 0f, 25f),
-                new Vector3(0f, 0f, 25f),
+                new Vector3(15f, 0f, 25f),
                 new Vector3(50f, 0f, 25f),
 
-                new Vector3(-6.5f, 0f, 25f),
-                new Vector3(-5.0f, 0f, 25f)
+                new Vector3(-6.5f, 0f, 26f),
+                new Vector3(-5.0f, 0f, 24f)
             );
 
             CreateStoragePlot(-4f, 0.01f, 2.5f, 5, 2);
@@ -117,18 +142,15 @@ namespace Models
             robotPathfindingGraph = new Graph(edges);
 
             truckPathfindingGraph = new Graph(
-                new List<Edge>(){ new Edge(POI.TruckSpawn, POI.TruckStop), new Edge(POI.TruckStop, POI.TruckDespawn) }
+                new List<Edge>()
+                {
+                    new Edge(POI.TruckSpawn, POI.TruckStop),
+                    new Edge(POI.TruckStop, POI.TruckDespawn)
+                }
             );
 
-            List<Vector3> storagePositions = new List<Vector3>();
-            this.GetObjectsOfType<StoragePlot>().ForEach((p) => p.CargoSlots.ForEach(s => storagePositions.Add(s.PositionAbsolute)));
-
-            //robotPathfindingGraph.IntegrateVerticesToNearestEdge(storagePositions);
-
             robotPathfindingGraph.IntegrateVerticesToNearestEdge(new List<Vector3>() { POI.RobotEnterTruck, POI.RobotExitTruck }, 0);
-
             worldObjects.Add(new GraphDisplay(this, robotPathfindingGraph));
-
             foreach (Vector3 s in POI.RobotSpawns) CreateRobot(s);
 
         }
@@ -161,16 +183,18 @@ namespace Models
         }
 
         private Robot CreateRobot(Vector3 s)
-        {
-            return CreateRobot(s.X, s.Y, s.Z);
-        }
+            => CreateRobot(s.X, s.Y, s.Z);
+        
         public Robot CreateRobot(float x, float y, float z)
         {
             Robot r = new Robot(this,x,y,z,0,0,0,robotPathfindingGraph);
             worldObjects.Add(r);
             return r;
         }
-        public Truck CreateTruck(Vector3 pos) => CreateTruck(pos.X, pos.Y, pos.Z);
+
+        public Truck CreateTruck(Vector3 pos) 
+            => CreateTruck(pos.X, pos.Y, pos.Z);
+
         public Truck CreateTruck(float x, float y, float z)
         {
             Truck t = new Truck(this,x,y,z,0,0,0);
@@ -179,12 +203,14 @@ namespace Models
 
             return t;
         }
+
         public StoragePlot CreateStoragePlot(float x, float y, float z, int length, int width)
         {
             StoragePlot p = new StoragePlot(this, length, width, x, y, z, 0, 0, 0);
             worldObjects.Add(p);
             return p;
         }
+
         public Shelf CreateShelf(float x = 0f, float y = 0f, float z = 0f)
         {
             Shelf s = new Shelf(this, x, y, z);
@@ -192,95 +218,43 @@ namespace Models
             return s;
         }
 
-        internal void DestroyObject(Entity e)
-        {
-            e.Destroy();
-            // TODO: Implement delete command for view
-        }
+        public List<CollidablePathfindingEntity> GetCollisions(CollidablePathfindingEntity entity)
+            => ObjectsOfType<CollidablePathfindingEntity>().Where(ce => 
+                entity.Guid != ce.Guid 
+                && entity.CheckCollision(ce.Intersectable)
+            ).ToList();
 
+        public void DestroyObject(Entity e)
+            => e.Destroy();
+        
         public List<CargoSlot> GetFreeStoragePlotCargoSlots()
-        {
-            List<CargoSlot> available = new List<CargoSlot>();
-            foreach(StoragePlot plot in GetObjectsOfType<StoragePlot>())
-            {
-                available.AddRange(plot.FreeCargoSlots);
-            }
-            return available;
-        }
+            => ObjectsOfType<StoragePlot>().SelectMany(plot => plot.FreeCargoSlots).ToList();
 
         public IDisposable Subscribe(IObserver<UICommand> observer)
         {
-            if (!observers.Contains(observer)) {
+            if (!observers.Contains(observer))
+            {
                 observers.Add(observer);
-
                 SendCreationCommandsToObserver(observer);
             }
             return new Unsubscriber<UICommand>(observers, observer);
         }
 
-        public List<Entity> GetObjects()
-        {
-            return this.worldObjects;
-        }
+        private void SendCommandToObservers(UICommand c)
+            => observers.ForEach(o => o.OnNext(c));
 
-        public List<T> GetObjectsOfType<T>() where T : Entity
-        {
-            List<T> obs = new List<T>();
+        private void SendCreationCommandsToObserver(IObserver<UICommand> obs)
+            => worldObjects.ForEach(o => obs.OnNext(new UpdateModel3DCommand(o)));
 
-            foreach (Entity e in GetObjects())
-                if (e is T) obs.Add(e as T);
-
-            return obs;
-        }
-
-        private async void SendCommandToObservers(UICommand c) {
-            for(int i = 0; i < this.observers.Count; i++) {
-                this.observers[i].OnNext(c);
-            }
-        }
-
-        private void SendCreationCommandsToObserver(IObserver<UICommand> obs) {
-            foreach(Entity m3d in worldObjects) {
-                obs.OnNext(new UpdateModel3DCommand(m3d));
-            }
-        }
+        public bool NeedsUpdate()
+            => worldObjects.Where(e => e is IUpdatable).Any(e => (e as IUpdatable).NeedsUpdate());
 
         public bool Tick(int tick)
         {
-            int threads = Process.GetCurrentProcess().Threads.Count;
             // Run current simulation task if any is available
-            if (this._simulationTask != null)
-            {
-                if(this._simulationTask.Tick())
-                {
-                    Console.WriteLine("Task finished running after tick #{0}", this._simulationTask.TickRuntime);
-                    this._simulationTask = null;
-                }
-            }
-            foreach (Entity o in worldObjects)
-            {
-                o.Tick(tick);
-            }
+            if(this._simulationTask != null && this._simulationTask.Tick()) this._simulationTask = null;
+            foreach (Entity o in worldObjects) o.Tick(tick);
             return true;
-        }
-
-        public bool NeedsUpdate()
-        {   // If any child object needs an update, so does the world
-            foreach (IUpdatable u in worldObjects.Where(e => e is IUpdatable).Select(e => e as IUpdatable))
-                if (u.NeedsUpdate()) return true;
-
-            return false;
-        }
-
-        public List<CollidablePathfindingEntity> GetCollisions(CollidablePathfindingEntity entity)
-        {
-            List<CollidablePathfindingEntity> collisions = new List<CollidablePathfindingEntity>();
-
-            foreach (var ce in GetObjectsOfType<CollidablePathfindingEntity>())
-                if (entity.Guid != ce.Guid && entity.CheckCollision(ce.Intersectable))
-                    collisions.Add(ce);
-                
-            return collisions;
         }
     }
 
