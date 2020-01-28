@@ -24,7 +24,7 @@
 }
 
 CreateTruck = function () {
-    var truck = LoadObject(MODELS.Truck);
+    var truck = MODELS.LoadObject(MODELS.Truck);
 
     truck.rotation.y = 0.5 * Math.PI;
     truck.position.y = 1.5;
@@ -36,17 +36,11 @@ CreateTruck = function () {
     return group;
 }
 
-LoadObject = function (json) {
-
-    var loader = new THREE.ObjectLoader();
-    return loader.parse(json);
-}
-
 CreateShelf = function () {
 
     var group = new THREE.Group();
 
-    group.add(LoadObject(MODELS.Shelf));
+    group.add(MODELS.LoadObject(MODELS.Shelf));
     group.name = "Shelf";
 
     return group;

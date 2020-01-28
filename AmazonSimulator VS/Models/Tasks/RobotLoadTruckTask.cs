@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AmazonSimulator_VS;
+using System;
 
 namespace Models
 {
@@ -17,27 +18,17 @@ namespace Models
             Finished
         }
 
-        private Shelf _item;
+        private IReleasable<Robot> _lock;
         private CargoSlot _destination;
         private TaskState _state;
         private Truck _truck;
+        private Shelf _item;
 
-        private IReleasable<Robot> _lock;
-
-        public Robot Robot
-            => _targetEntity as Robot;
-
-        public TaskState State
-            => _state;
-
-        public Truck Truck
-            => _truck;
-
-        public Shelf Cargo
-            => _item;
-
-        public CargoSlot Destination
-            => _destination;
+        public TaskState State => _state;
+        public Robot Robot => _targetEntity as Robot;
+        public Truck Truck => _truck;
+        public Shelf Cargo => _item;
+        public CargoSlot Destination => _destination;
 
         public RobotLoadTruckTask(Robot robot, Truck truck, Shelf item, CargoSlot destination)
             : base(robot)

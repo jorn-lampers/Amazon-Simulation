@@ -37,7 +37,7 @@ namespace Models
             return Nodes.Any((n) => n.Position.Equals(pos));
         }
 
-        private Node GetNodeAt(Vector3 pos)
+        public Node GetNodeAt(Vector3 pos)
         {
             return Nodes.First(n => n.Position.Equals(pos));
         }
@@ -64,7 +64,7 @@ namespace Models
             return new Node(NearestColinearPointOn(v, out Edge edge), edge.Width);
         }
 
-        public Vector3 NearestColinearPointOn(Vector3 v, out Edge edgeOut)
+        private Vector3 NearestColinearPointOn(Vector3 v, out Edge edgeOut)
         {
             var result = Edges
                 .Select(current => 
@@ -173,6 +173,7 @@ namespace Models
 
             // Distance from source is always zero
             dist[source] = 0.0;
+
             // prev[source] = source implies distance to 'source' is evaluated
             prev[source] = source;
 
@@ -223,7 +224,7 @@ namespace Models
         /// <param name="destination">The target node, if this vertex is not mapped on passed graph, a path to destination via nearest node that is present on graph g is returned.</param>
         /// <returns>A list of vertices representing the shortest path from passed Source Node to Target Node.</returns>
         public List<Node> DijkstraShortestPath(Node source, Node destination)
-        {
+        {   // TODO: Graph.DijkstraShortestPath() shouldn't return any duplicates...
             ImpliedNode impliedSource = null;
 
             if (DefinesNodeAt(source)) { }
@@ -251,7 +252,7 @@ namespace Models
 
             do
             {   // Backtrack the shortest route from source to destination
-                path.Add(next);
+                if(!path.Contains(next)) path.Add(next);
                 next = data[next].Item2;
             }   // Keep backtracking until the given starting position is reached
             while (next.Position != source.Position);

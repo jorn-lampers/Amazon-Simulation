@@ -150,6 +150,10 @@
                         delete worldObjects[command.parameters];
                     }
                 }
+
+                socket.onerror = function (event) {
+                    console.log("A websocket error occured!" + event);
+                }
             }
 
             // Animation loop

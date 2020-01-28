@@ -9,8 +9,8 @@ namespace Models
     {
         private PolygonalFootprint _footprint;
 
-        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ)
-            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
+        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond)
+            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ, movementPerSecond)
         {
             this._footprint = new PolygonalFootprint(
                 this, 

@@ -1,3 +1,4 @@
+using AmazonSimulator_VS;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,21 +12,18 @@ namespace Models {
         private float _movementSpeed;
         private int _currentWaypoint;
 
-        public float MovementSpeed 
-            => _movementSpeed;
-
-        public List<Vector3> Route 
-            => _route; 
-
+        public float MovementSpeed => _movementSpeed; // In units per second.
+        public List<Vector3> Route => _route; 
         public Vector3? Destination
             => _route.Count > 0 
             ? _route.Last() 
-            : Position; 
+            : Position;
 
-        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementSpeed = 0.35f) 
+        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond)
             : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
-            => this._movementSpeed = movementSpeed;
-        
+        {
+            this._movementSpeed = movementPerSecond / Constants.SIM_TPS;
+        }
 
         public void SetPathfindingTarget(Vector3 target)
         {
@@ -43,6 +41,8 @@ namespace Models {
             Node lastOnGraph = g.NearestNodeTo(target);
 
             List<Node> dr = g.DijkstraShortestPath(firstOnGraph, lastOnGraph);
+            dr = dr.Distinct().ToList(); // TODO: Graph.DijkstraShortestPath() shouldn't return any duplicates...
+
             List<Vector3> routeRight = new List<Vector3>();
 
             if (!g.ImpliesNodeAt(Position)) // If current position is not present on graph ...

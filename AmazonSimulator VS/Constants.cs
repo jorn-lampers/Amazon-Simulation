@@ -1,13 +1,19 @@
-﻿using System;
+﻿using Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
-namespace Models
+namespace AmazonSimulator_VS
 {
     public static class Constants
     {
+        public static readonly int SIM_TPS = 60;
+
+        public static readonly float RobotSpeed = 20f;
+        public static readonly float TruckSpeed = 15f;
+
         public static readonly Vector3[] RobotSpawns = {
             new Vector3(5f, 0f, -5f),
             new Vector3(2.5f, 0f, -5f),

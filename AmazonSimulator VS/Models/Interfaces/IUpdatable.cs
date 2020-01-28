@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Models {
-    interface IUpdatable
+    public interface IUpdatable
     {
         bool Tick(int tick);
-        bool NeedsUpdate();
-
+        bool NeedsUpdate(bool evaluateOnly = false);
         void Destroy();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AmazonSimulator_VS;
+using System;
 
 namespace Models
 {
@@ -96,6 +97,7 @@ namespace Models
                     _destination.SetCargo(_targetEntity.ReleaseCargo());
                     _state = TaskState.Finished;
                     this._isFinished = true;
+                    _targetEntity.SetPathfindingTarget(_targetEntity.IdlePos, _targetEntity.PathfindingGraph);
                     break;
                 case RobotUnloadTruckTask.TaskState.Finished:
                     break;

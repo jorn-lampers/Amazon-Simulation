@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AmazonSimulator_VS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,8 +53,7 @@ namespace Controllers
         {
             return new SimulationMetrics
             {
-                TickIntervalInMilliseconds = 16,   // TPS == 1000 / TickIntervalInMilliseconds
-
+                TickIntervalInMilliseconds = 1000 / Constants.SIM_TPS,   // TPS == 1000 / TickIntervalInMilliseconds
 
                 IsRunning = false,                  // Default state represent a fresh, uncommenced simulation
                 StartTime = DateTime.MinValue,      // Defaults to epoch time to signify simulation is yet to be started

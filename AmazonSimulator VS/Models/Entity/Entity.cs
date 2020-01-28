@@ -78,6 +78,12 @@ namespace Models
         }
 
         public virtual bool Tick(int tick) => this._needsUpdate;
-        public bool NeedsUpdate() => this._needsUpdate;
+
+        public bool NeedsUpdate(bool evaluateOnly = false)
+        {
+            bool val = this._needsUpdate;
+            if (!evaluateOnly) _needsUpdate = false;
+            return val;
+        }
     }
 }

@@ -85,8 +85,14 @@ namespace Views
             }
             try
             {
-                socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
-                Console.WriteLine("Closed websocket.");
+                if(socket.State == WebSocketState.CloseReceived)
+                {
+                    socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", CancellationToken.None);
+                    Console.WriteLine("Websocket closed by client.");
+                }
+                else
+                    throw new Exception("Websocket aborted!");
+                
             } catch (WebSocketException ex)
             {
                 Console.WriteLine("Could not close websocket! Was it already closed? {0}", ex.Message);
@@ -95,6 +101,7 @@ namespace Views
 
         private bool SendMessage(string message)
         {
+            //Console.WriteLine("Sending message {0} ", message);
             byte[] buffer = Encoding.UTF8.GetBytes(message);
             try
             {

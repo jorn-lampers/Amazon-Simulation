@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AmazonSimulator_VS;
 using Controllers;
 
 namespace Models
@@ -109,8 +110,11 @@ namespace Models
 
         public Truck CreateTruck(float x, float y, float z, bool cargo)
         {
-            Truck t = new Truck(this,x,y,z,0,0,0,cargo);
+            Truck t = new Truck(this,x,y,z,0,0,0);
             _worldObjects.Add(t);
+
+            if(cargo) t.CargoSlots.ForEach(s => s.SetCargo(CreateShelf()));
+
 
             return t;
         }
@@ -155,7 +159,7 @@ namespace Models
             _worldObjects.ForEach(o => obs.OnNext(new UpdateModel3DCommand(o)));
         }
 
-        public bool NeedsUpdate()
+        public bool NeedsUpdate(bool evaluateOnly = false)
         {
             return _worldObjects
                 .Where(e => e is IUpdatable)

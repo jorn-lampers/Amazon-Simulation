@@ -27,7 +27,12 @@ namespace Models
         public Shelf Cargo => _content; 
         public Vector3 PositionAbsolute => _parent.Position + _relativePosition;
 
-        bool IUpdatable.NeedsUpdate() => _needsUpdate;
+        public bool NeedsUpdate(bool evaluateOnly = false)
+        {
+            bool val = _needsUpdate;
+            if(!evaluateOnly) _needsUpdate = false;
+            return val;
+        }
 
         public bool SetCargo(Shelf cargo)
         {
@@ -35,7 +40,10 @@ namespace Models
                 ReserveForCargo(cargo);
 
             if (IsAvailable || _reservedBy == cargo)
+            {
                 this._content = cargo;
+                this._needsUpdate = true;
+            }
 
             else return false;
 
@@ -66,8 +74,9 @@ namespace Models
 
         public bool Tick(int tick)
         {
-            if (!IsEmpty)
+            if (!IsEmpty && _parent.NeedsUpdate(true))
                 Cargo.Move(PositionAbsolute);
+
             return true;
         }
 

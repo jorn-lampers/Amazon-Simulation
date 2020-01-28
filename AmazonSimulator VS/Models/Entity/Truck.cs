@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AmazonSimulator_VS;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -10,24 +11,14 @@ namespace Models
         private List<CargoSlot> _cargoSlots;
         private IReleasable<Robot> _occupant;
 
-        public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, bool cargo) 
-            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ)
+        public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) 
+            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed)
         {
             _cargoSlots = new List<CargoSlot>();
 
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-5f, 0f, -1f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-5f, 0f, 0f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-5f, 0f, 1f)));
-
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-6f, 0f, -1f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-6f, 0f, 0f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-6f, 0f, 1f)));
-
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, -1f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, 0f)));
-            _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, 1f)));
-
-            if (cargo) _cargoSlots.ForEach(s => s.SetCargo((parent as World).CreateShelf()));
+            for(int px = -3; px > -13; px--)
+                for(int pz = -1; pz < 2; pz++)
+                    _cargoSlots.Add(new CargoSlot(this, new Vector3(px, 0f, pz)));
         }
 
         public List<CargoSlot> CargoSlots 

@@ -54,7 +54,9 @@ namespace Models
         public override bool Tick(int tick)
         {
             base.Tick(tick);
-            foreach (CargoSlot slot in _cargoSlots) slot.Tick(tick);
+
+            foreach (CargoSlot slot in _cargoSlots)
+                slot.Tick(tick);
 
             return _needsUpdate;
         }

@@ -4,7 +4,8 @@ using System.Numerics;
 
 namespace Models
 {
-    public interface ICargoCarrier
+    public interface ICargoCarrier 
+        : IUpdatable
     {
         List<CargoSlot> CargoSlots { get; }
         List<CargoSlot> FreeCargoSlots { get; }
@@ -12,7 +13,6 @@ namespace Models
         bool HasFreeCargoSlots { get; }
         Vector3 Position { get; }
 
-        void Destroy();
         bool TryAddCargo(Shelf item);
 
     }
