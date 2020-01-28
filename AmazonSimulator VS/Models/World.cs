@@ -22,6 +22,61 @@ namespace Models
 
         public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 26f);
         public static readonly Vector3 RobotExitTruck = new Vector3(-5.0f, 0f, 24f);
+
+        public static readonly float LaneWidth = 2.0f;
+
+        public static readonly Vector3[] GraphNodePositions =
+        {
+            new Vector3(-6.5f, 0.0f, 15.0f),
+            new Vector3(+0.0f, 0.0f, 15.0f),
+            new Vector3(+6.5f, 0.0f, 15.0f),
+
+            new Vector3(-6.5f, 0.0f, 10.0f),
+            new Vector3(+0.0f, 0.0f, 10.0f),
+            new Vector3(+6.5f, 0.0f, 10.0f),
+
+            new Vector3(-6.5f, 0.0f, 5.0f),
+            new Vector3(+0.0f, 0.0f, 5.0f),
+            new Vector3(+6.5f, 0.0f, 5.0f),
+
+            new Vector3(-6.5f, 0.0f, 0.0f),
+            new Vector3(+0.0f, 0.0f, 0.0f),
+            new Vector3(+6.5f, 0.0f, 0.0f)
+        };
+
+        public static readonly Edge[] GraphEdges =
+        {
+            new Edge(GraphNodePositions[0], GraphNodePositions[1], LaneWidth),
+            new Edge(GraphNodePositions[1], GraphNodePositions[2], LaneWidth),
+
+            new Edge(GraphNodePositions[1], GraphNodePositions[4], LaneWidth),
+            new Edge(GraphNodePositions[3], GraphNodePositions[4], LaneWidth),
+
+            new Edge(GraphNodePositions[4], GraphNodePositions[5], LaneWidth),
+            new Edge(GraphNodePositions[4], GraphNodePositions[7], LaneWidth),
+
+            new Edge(GraphNodePositions[6], GraphNodePositions[7], LaneWidth),
+            new Edge(GraphNodePositions[7], GraphNodePositions[8], LaneWidth),
+
+            new Edge(GraphNodePositions[7], GraphNodePositions[10], LaneWidth),
+            new Edge(GraphNodePositions[9], GraphNodePositions[10], LaneWidth),
+            new Edge(GraphNodePositions[10], GraphNodePositions[11], LaneWidth)
+        };
+
+        public static readonly int StoragePlotLength = 5;
+        public static readonly int StoragePlotWidth = 2;
+
+        public static readonly Vector3[] StoragePositions =
+        {
+            new Vector3(-4f, 0.01f, 2.5f),
+            new Vector3(+4f, 0.01f, 2.5f),
+
+            new Vector3(-4f, 0.01f, 7.5f),
+            new Vector3(+4f, 0.01f, 7.5f),
+
+            new Vector3(-4f, 0.01f, 12.5f),
+            new Vector3(+4f, 0.01f, 12.5f)
+        };
     }
 
     public class World 
@@ -50,73 +105,29 @@ namespace Models
         {
             this._simulationTask = null;
 
-            CreateStoragePlot(-4f, 0.01f, 2.5f, 5, 2);
-            CreateStoragePlot(+4f, 0.01f, 2.5f, 5, 2);
+            foreach (Vector3 pos in Constants.StoragePositions)
+                CreateStoragePlot(pos.X, pos.Y, pos.Z, Constants.StoragePlotLength, Constants.StoragePlotWidth);
 
-            CreateStoragePlot(-4f, 0.01f, 7.5f, 5, 2);
-            CreateStoragePlot(+4f, 0.01f, 7.5f, 5, 2);
-
-            CreateStoragePlot(-4f, 0.01f, 12.5f, 5, 2);
-            CreateStoragePlot(+4f, 0.01f, 12.5f, 5, 2);
-
-            Vector3 A = new Vector3(-6.5f, 0.0f, 15.0f);
-            Vector3 B = new Vector3(+0.0f, 0.0f, 15.0f);
-            Vector3 C = new Vector3(+6.5f, 0.0f, 15.0f);
-
-            Vector3 D = new Vector3(-6.5f, 0.0f, 10.0f);
-            Vector3 E = new Vector3(+0.0f, 0.0f, 10.0f);
-            Vector3 F = new Vector3(+6.5f, 0.0f, 10.0f);
-
-            Vector3 G = new Vector3(-6.5f, 0.0f, 5.0f);
-            Vector3 H = new Vector3(+0.0f, 0.0f, 5.0f);
-            Vector3 I = new Vector3(+6.5f, 0.0f, 5.0f);
-
-            Vector3 J = new Vector3(-6.5f, 0.0f, 0.0f);
-            Vector3 K = new Vector3(+0.0f, 0.0f, 0.0f);
-            Vector3 L = new Vector3(+6.5f, 0.0f, 0.0f);
-
-            float laneWidth = 2.0f;
-
-            Edge AB = new Edge(A, B, laneWidth);
-            Edge BC = new Edge(B, C, laneWidth);
-
-            Edge BE = new Edge(B, E, laneWidth);
-            Edge DE = new Edge(D, E, laneWidth);
-
-            Edge EF = new Edge(E, F, laneWidth);
-            Edge EH = new Edge(E, H, laneWidth);
-
-            Edge GH = new Edge(G, H, laneWidth);
-            Edge HI = new Edge(H, I, laneWidth);
-
-            Edge HK = new Edge(H, K, laneWidth);
-            Edge JK = new Edge(J, K, laneWidth);
-            Edge KL = new Edge(K, L, laneWidth);
-
-            List<Vector3> vertices = new List<Vector3>()
-            {
-                A, B, C, D, E, F, G, H, I, J, K, L
-            };
-
-            List<Edge> edges = new List<Edge>()
-            {
-                AB, BC, BE, DE, EF, EH, GH, HI, HK, JK, KL
-            };
-
-            robotPathfindingGraph = new Graph(edges);
-
+            robotPathfindingGraph = new Graph(Constants.GraphEdges);
             truckPathfindingGraph = new Graph(
-                new List<Edge>()
+                new Edge[]
                 {
                     new Edge(Constants.TruckSpawn, Constants.TruckStop),
                     new Edge(Constants.TruckStop, Constants.TruckDespawn)
                 }
             );
 
-            robotPathfindingGraph.IntegrateVerticesToNearestEdge(new List<Vector3>() { Constants.RobotEnterTruck, Constants.RobotExitTruck }, 0);
-            worldObjects.Add(new GraphDisplay(this, robotPathfindingGraph));
-            foreach (Vector3 s in Constants.RobotSpawns) CreateRobot(s);
+            robotPathfindingGraph.IntegrateVerticesToNearestEdge(
+                new List<Vector3>() {
+                    Constants.RobotEnterTruck,
+                    Constants.RobotExitTruck
+                }, 
+            0);
 
+            worldObjects.Add(new GraphDisplay(this, robotPathfindingGraph));
+
+            foreach (Vector3 s in Constants.RobotSpawns)
+                CreateRobot(s);
         }
 
         public bool RunTask(SimulationTask<World> task)

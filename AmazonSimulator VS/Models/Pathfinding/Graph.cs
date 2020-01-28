@@ -20,10 +20,10 @@ namespace Models
         public IReadOnlyCollection<Edge> Edges 
             => _edges.AsReadOnly(); 
 
-        public Graph(List<Edge> edges)
+        public Graph(Edge[] edges)
         {
             this._nodes = new List<Node>();
-            this._edges = edges;
+            this._edges = new List<Edge>(edges);
 
             foreach (Edge e in _edges)
             {
