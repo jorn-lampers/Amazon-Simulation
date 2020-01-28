@@ -6,6 +6,24 @@ using Controllers;
 
 namespace Models
 {
+    public static class Constants
+    {
+        public static readonly Vector3[] RobotSpawns = {
+            new Vector3(5f, 0f, -5f),
+            new Vector3(2.5f, 0f, -5f),
+            new Vector3(0f, 0f, -5f),
+            new Vector3(-2.5f, 0f, -5f),
+            new Vector3(-5f, 0f, -5f)
+        };
+
+        public static readonly Vector3 TruckSpawn = new Vector3(-50f, 0f, 25f);
+        public static readonly Vector3 TruckStop = new Vector3(15f, 0f, 25f);
+        public static readonly Vector3 TruckDespawn = new Vector3(50f, 0f, 25f);
+
+        public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 26f);
+        public static readonly Vector3 RobotExitTruck = new Vector3(-5.0f, 0f, 24f);
+    }
+
     public class World 
         : IObservable<UICommand>
         , IUpdatable
@@ -18,8 +36,6 @@ namespace Models
         private Graph robotPathfindingGraph;
         private Graph truckPathfindingGraph;
 
-        public PointsOfInterest POI;
-
         public List<Entity> Objects
             => this.worldObjects;
 
@@ -27,64 +43,12 @@ namespace Models
             => Objects.Where(e => e is T)
             .Select(et => et as T).ToList();
 
-        public Graph RobotGraph 
-            => robotPathfindingGraph; 
-
-        public Graph TruckGraph 
-            => truckPathfindingGraph; 
-
-        public Node RobotQueueStart 
-            => Graph.NearestExplicitNodeTo(POI.RobotEnterTruck, RobotGraph); 
-
-        public Node RobotTruckExit 
-            => Graph.NearestExplicitNodeTo(POI.RobotExitTruck, RobotGraph);
-
-        public struct PointsOfInterest
-        {
-            public List<Vector3> RobotSpawns;
-
-            public Vector3 TruckSpawn;
-            public Vector3 TruckStop;
-            public Vector3 TruckDespawn;
-
-            public Vector3 RobotEnterTruck;
-            public Vector3 RobotExitTruck;
-
-            public PointsOfInterest(List<Vector3> RobotSpawns, Vector3 TruckSpawn, Vector3 TruckStop, Vector3 TruckDespawn, Vector3 RobotInteractTruck, Vector3 RobotExitTruck)
-            {
-                this.RobotSpawns = RobotSpawns;
-
-                this.TruckSpawn = TruckSpawn;
-                this.TruckStop = TruckStop;
-                this.TruckDespawn = TruckDespawn;
-
-                this.RobotEnterTruck = RobotInteractTruck;
-                this.RobotExitTruck = RobotExitTruck;
-            }
-        }
+        public Graph RobotGraph => robotPathfindingGraph; 
+        public Graph TruckGraph => truckPathfindingGraph; 
 
         public World()
         {
             this._simulationTask = null;
-
-            POI = new PointsOfInterest(
-
-                new List<Vector3>()
-                {
-                    new Vector3(0f, 0f, 0f),
-                    new Vector3(1f, 0f, 0f),
-                    new Vector3(2f, 0f, 0f),
-                    new Vector3(3f, 0f, 0f),
-                    new Vector3(4f, 0f, 0f)
-                },
-
-                new Vector3(-50f, 0f, 25f),
-                new Vector3(15f, 0f, 25f),
-                new Vector3(50f, 0f, 25f),
-
-                new Vector3(-6.5f, 0f, 26f),
-                new Vector3(-5.0f, 0f, 24f)
-            );
 
             CreateStoragePlot(-4f, 0.01f, 2.5f, 5, 2);
             CreateStoragePlot(+4f, 0.01f, 2.5f, 5, 2);
@@ -144,14 +108,14 @@ namespace Models
             truckPathfindingGraph = new Graph(
                 new List<Edge>()
                 {
-                    new Edge(POI.TruckSpawn, POI.TruckStop),
-                    new Edge(POI.TruckStop, POI.TruckDespawn)
+                    new Edge(Constants.TruckSpawn, Constants.TruckStop),
+                    new Edge(Constants.TruckStop, Constants.TruckDespawn)
                 }
             );
 
-            robotPathfindingGraph.IntegrateVerticesToNearestEdge(new List<Vector3>() { POI.RobotEnterTruck, POI.RobotExitTruck }, 0);
+            robotPathfindingGraph.IntegrateVerticesToNearestEdge(new List<Vector3>() { Constants.RobotEnterTruck, Constants.RobotExitTruck }, 0);
             worldObjects.Add(new GraphDisplay(this, robotPathfindingGraph));
-            foreach (Vector3 s in POI.RobotSpawns) CreateRobot(s);
+            foreach (Vector3 s in Constants.RobotSpawns) CreateRobot(s);
 
         }
 

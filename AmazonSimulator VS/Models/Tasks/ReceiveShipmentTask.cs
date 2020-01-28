@@ -52,9 +52,9 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(_targetEntity.POI.TruckSpawn, true);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn, true);
                     
-                    _truck.SetPathfindingTarget(_targetEntity.POI.TruckStop, _targetEntity.TruckGraph);
+                    _truck.SetPathfindingTarget(Constants.TruckStop, _targetEntity.TruckGraph);
 
                     this._state = TaskState.WaitTruckArrival;
                     break;
@@ -71,7 +71,7 @@ namespace Models
                     List<CargoSlot> availableStorageSlots = _targetEntity.GetFreeStoragePlotCargoSlots();
                     if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
-                    RobotUnloadTruckTask rt = new RobotUnloadTruckTask(idleRobots[0], _truck, _targetEntity, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
+                    RobotUnloadTruckTask rt = new RobotUnloadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
                     idleRobots[0].AssignTask(rt);
                     _robotTasks.Add(rt);
 
@@ -80,7 +80,7 @@ namespace Models
 
                 case TaskState.WaitCargoTasksFinished:
                     if (!_robotTasks.All((task) => task.IsFinished)) break;
-                    _truck.SetPathfindingTarget(_targetEntity.POI.TruckDespawn, _targetEntity.TruckGraph);
+                    _truck.SetPathfindingTarget(Constants.TruckDespawn, _targetEntity.TruckGraph);
                     _state = TaskState.WaitTruckExit;
                     break;
 
@@ -147,8 +147,8 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(_targetEntity.POI.TruckSpawn, false);
-                    _truck.SetPathfindingTarget(_targetEntity.POI.TruckStop, _targetEntity.TruckGraph);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn, false);
+                    _truck.SetPathfindingTarget(Constants.TruckStop, _targetEntity.TruckGraph);
 
                     this._state = TaskState.WaitTruckArrival;
                     break;
@@ -166,7 +166,7 @@ namespace Models
                     List<CargoSlot> availableStorageSlots = _truck.FreeCargoSlots;
                     if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
-                    RobotLoadTruckTask rt = new RobotLoadTruckTask(idleRobots[0], _truck, _targetEntity, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
+                    RobotLoadTruckTask rt = new RobotLoadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
                     idleRobots[0].AssignTask(rt);
                     _robotTasks.Add(rt);
 
@@ -175,7 +175,7 @@ namespace Models
 
                 case TaskState.WaitCargoTasksFinished:
                     if (!_robotTasks.All((task) => task.IsFinished)) break;
-                    _truck.SetPathfindingTarget(_targetEntity.POI.TruckDespawn, _targetEntity.TruckGraph);
+                    _truck.SetPathfindingTarget(Constants.TruckDespawn, _targetEntity.TruckGraph);
                     _state = TaskState.WaitTruckExit;
                     break;
 

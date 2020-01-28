@@ -22,7 +22,6 @@ namespace Models
         private CargoSlot _destination;
         private TaskState _state;
         private Truck _truck;
-        private EntityEnvironmentInfoProvider _info;
 
         private IReleasable<Robot> _lock;
 
@@ -41,13 +40,12 @@ namespace Models
         public CargoSlot Destination
             => _destination;
 
-        public RobotUnloadTruckTask(Robot robot, Truck truck, EntityEnvironmentInfoProvider info, Shelf item, CargoSlot destination)
+        public RobotUnloadTruckTask(Robot robot, Truck truck, Shelf item, CargoSlot destination)
             : base(robot)
         {
             this._item = item;
             this._destination = destination;
             this._truck = truck;
-            this._info = info;
 
             if (!this._destination.ReserveForCargo(item))
                 throw new InvalidOperationException("Robot.CargoTask could not reserve CargoSlot!");
@@ -58,7 +56,7 @@ namespace Models
             switch (State)
             {
                 case RobotUnloadTruckTask.TaskState.Init:
-                    _targetEntity.SetPathfindingTarget(_info.RobotQueueStart.Position, _targetEntity.PathfindingGraph);
+                    _targetEntity.SetPathfindingTarget(Constants.RobotEnterTruck, _targetEntity.PathfindingGraph);
                     _state = TaskState.MoveToQueue;
                     break;
 
@@ -79,7 +77,7 @@ namespace Models
                     break;
                 case RobotUnloadTruckTask.TaskState.PickupCargo:
                     if (!_targetEntity.TryAddCargo(_item)) break;
-                    _targetEntity.SetPathfindingTarget(_info.RobotTruckExit.Position);
+                    _targetEntity.SetPathfindingTarget(Constants.RobotExitTruck);
                     _state = TaskState.LeaveTruck;
                     break;
                 case RobotUnloadTruckTask.TaskState.LeaveTruck:

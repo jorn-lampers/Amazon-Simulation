@@ -8,7 +8,5 @@ namespace Models
     public interface EntityEnvironmentInfoProvider
     {
         List<CollidablePathfindingEntity> GetCollisions(CollidablePathfindingEntity footprint);
-        Node RobotQueueStart { get; }
-        Node RobotTruckExit { get; }
     }
 }

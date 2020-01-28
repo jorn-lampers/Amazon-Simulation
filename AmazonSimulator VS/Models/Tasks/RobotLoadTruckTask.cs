@@ -21,7 +21,6 @@ namespace Models
         private CargoSlot _destination;
         private TaskState _state;
         private Truck _truck;
-        private EntityEnvironmentInfoProvider _info;
 
         private IReleasable<Robot> _lock;
 
@@ -40,13 +39,12 @@ namespace Models
         public CargoSlot Destination
             => _destination;
 
-        public RobotLoadTruckTask(Robot robot, Truck truck, EntityEnvironmentInfoProvider info, Shelf item, CargoSlot destination)
+        public RobotLoadTruckTask(Robot robot, Truck truck, Shelf item, CargoSlot destination)
             : base(robot)
         {
             this._item = item;
             this._destination = destination;
             this._truck = truck;
-            this._info = info;
 
             if (!this._destination.ReserveForCargo(item))
                 throw new InvalidOperationException("Robot.CargoTask could not reserve CargoSlot!");
@@ -69,7 +67,7 @@ namespace Models
                 case RobotLoadTruckTask.TaskState.PickupCargo:
                     if (!_targetEntity.TryAddCargo(_item)) break;
                     _state = TaskState.MoveToQueue;
-                    _targetEntity.SetPathfindingTarget(_info.RobotQueueStart, _targetEntity.PathfindingGraph);
+                    _targetEntity.SetPathfindingTarget(Constants.RobotEnterTruck, _targetEntity.PathfindingGraph);
                     break;
                 case RobotLoadTruckTask.TaskState.MoveToQueue:
                     if (_targetEntity.IsAtDestination()) _state = TaskState.AwaitTruckAvailable;
@@ -83,7 +81,7 @@ namespace Models
                 case RobotLoadTruckTask.TaskState.DropOffDestination:
                     if (!_targetEntity.IsAtDestination()) break;
                     _destination.SetCargo(_targetEntity.CargoSlots[0].ReleaseCargo());
-                    _targetEntity.SetPathfindingTarget(_info.RobotTruckExit);
+                    _targetEntity.SetPathfindingTarget(Constants.RobotExitTruck);
                     _state = TaskState.LeaveTruck;
                     break;
                 case RobotLoadTruckTask.TaskState.LeaveTruck:
