@@ -68,7 +68,7 @@ namespace Models
 
                 case TaskState.WaitTruckUnloaded:
                     List<Robot> idleRobots = _targetEntity.ObjectsOfType<Robot>().Where((r) => r.IsStandBy).ToList();
-                    List<CargoSlot> availableStorageSlots = _targetEntity.GetFreeStoragePlotCargoSlots();
+                    List<CargoSlot> availableStorageSlots = _targetEntity.ObjectsOfType<StoragePlot>().SelectMany(plot => plot.FreeCargoSlots).ToList();
                     if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
                     RobotUnloadTruckTask rt = new RobotUnloadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
@@ -86,7 +86,7 @@ namespace Models
 
                 case TaskState.WaitTruckExit:
                     if (!_truck.IsAtDestination()) break;
-                    _targetEntity.DestroyObject(_truck);
+                    _truck.Destroy();
                     _state = TaskState.Finished;
                     break;
 
@@ -155,7 +155,7 @@ namespace Models
 
                 case TaskState.WaitTruckArrival:
                     if (!_truck.IsAtDestination()) break;
-                    var occupied = _targetEntity.GetOccupiedStoragePlotCargoSlots();
+                    var occupied = _targetEntity.ObjectsOfType<StoragePlot>().SelectMany(plot => plot.OccupiedCargoSlots).ToList();
                     _slotsToUnload = new Queue<CargoSlot>(occupied.Take(Math.Min(occupied.Count(), _truck.FreeCargoSlots.Count)));
                     _robotTasks = new List<RobotLoadTruckTask>();
                     this._state = TaskState.WaitTruckLoaded;
@@ -181,7 +181,7 @@ namespace Models
 
                 case TaskState.WaitTruckExit:
                     if (!_truck.IsAtDestination()) break;
-                    _targetEntity.DestroyObject(_truck);
+                    _truck.Destroy();
                     _state = TaskState.Finished;
                     break;
 
