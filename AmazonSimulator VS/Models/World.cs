@@ -174,13 +174,15 @@ namespace Models
                 {
                     SendCommandToObservers(new UpdateModel3DCommand(e));
                     numUpdates++;
-                    e.needsUpdate = false;
                 }
             }
 
             // Marked entities can now safely be discarded.
             this.worldObjects.RemoveAll((e) => e.DiscardRequested());
         }
+
+        internal IEnumerable<CargoSlot> GetOccupiedStoragePlotCargoSlots()
+            => ObjectsOfType<StoragePlot>().SelectMany(plot => plot.OccupiedCargoSlots).ToList();
 
         private Robot CreateRobot(Vector3 s)
             => CreateRobot(s.X, s.Y, s.Z);
@@ -192,13 +194,12 @@ namespace Models
             return r;
         }
 
-        public Truck CreateTruck(Vector3 pos) 
-            => CreateTruck(pos.X, pos.Y, pos.Z);
+        public Truck CreateTruck(Vector3 pos, bool cargo) 
+            => CreateTruck(pos.X, pos.Y, pos.Z, cargo);
 
-        public Truck CreateTruck(float x, float y, float z)
+        public Truck CreateTruck(float x, float y, float z, bool cargo)
         {
-            Truck t = new Truck(this,x,y,z,0,0,0);
-            foreach(CargoSlot s in t.CargoSlots) s.SetCargo(CreateShelf());
+            Truck t = new Truck(this,x,y,z,0,0,0,cargo);
             worldObjects.Add(t);
 
             return t;
@@ -255,6 +256,11 @@ namespace Models
             if(this._simulationTask != null && this._simulationTask.Tick()) this._simulationTask = null;
             foreach (Entity o in worldObjects) o.Tick(tick);
             return true;
+        }
+
+        public void Destroy()
+        {
+            Objects.ForEach(o => o.Destroy());
         }
     }
 

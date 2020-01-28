@@ -10,7 +10,7 @@ namespace Models
         private List<CargoSlot> _cargoSlots;
         private IReleasable<Robot> _occupant;
 
-        public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) 
+        public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, bool cargo) 
             : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ)
         {
             _cargoSlots = new List<CargoSlot>();
@@ -26,6 +26,8 @@ namespace Models
             _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, -1f)));
             _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, 0f)));
             _cargoSlots.Add(new CargoSlot(this, new Vector3(-7f, 0f, 1f)));
+
+            if (cargo) _cargoSlots.ForEach(s => s.SetCargo((parent as World).CreateShelf()));
         }
 
         public List<CargoSlot> CargoSlots 
@@ -61,7 +63,13 @@ namespace Models
             base.Tick(tick);
             foreach(CargoSlot slot in _cargoSlots) slot.Tick(tick);
 
-            return needsUpdate;
+            return _needsUpdate;
+        }
+
+        public override void Destroy()
+        {
+            base.Destroy();
+            CargoSlots.ForEach(s => s.Destroy());
         }
     }
 }

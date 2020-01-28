@@ -12,6 +12,7 @@ namespace Models
         bool HasFreeCargoSlots { get; }
         Vector3 Position { get; }
 
+        void Destroy();
         bool TryAddCargo(Shelf item);
 
     }

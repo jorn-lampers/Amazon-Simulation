@@ -7,8 +7,6 @@
 </head>
 
 <body style="margin:0px;padding:0px;overflow:hidden;">
-
-
     <script>
         var socket;
 
@@ -47,6 +45,9 @@
                     case "t":
                         sendCommand("ReceiveShipmentCommand", {});
                         break;
+                    case "y":
+                        sendCommand("SendShipmentCommand", {});
+                        break;
 
                 }
             };
@@ -80,12 +81,15 @@
 
                 // Scene
                 scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x080808);
 
                 // Renderer
                 renderer = new THREE.WebGLRenderer({ antialias: true });
 
                 renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight + 5);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
                 document.body.appendChild(renderer.domElement);
 
@@ -95,19 +99,22 @@
 
                 // World base
                 var geometry = new THREE.PlaneGeometry(18, 46, 32);
-                var material = new THREE.MeshBasicMaterial({ color: 0xbbbbbb, side: THREE.DoubleSide });
+                var material = new THREE.MeshPhongMaterial({ color: 0xbbbbbb, side: THREE.DoubleSide });
                 var plane = new THREE.Mesh(geometry, material);
 
                 plane.rotation.x = Math.PI / 2.0;
-                plane.position.x = 0;
-                plane.position.z = 0;
+                plane.position.set(0,0,0);
+
+                plane.castShadow = true;
+                plane.receiveShadow = true;
 
                 scene.add(plane);
 
                 // Lighting
-                var light = new THREE.AmbientLight(0x404040);
-
-                light.intensity = 4;
+                var light = new THREE.PointLight(0x404040, 3); 
+                
+                light.position.set(0, 10, 0);
+                //light.intensity = 4;
 
                 scene.add(light);
             }
@@ -153,12 +160,16 @@
                 renderer.render(scene, camera);
             }
 
+            function start() {
+                console.log("Loading finished, starting simulation!");
+                initSocket();
+
+                animate();
+            }
+
             init();
-            initSocket();
-
-            LoadModels();
-
-            animate();
+            
+            MODELS.LoadModels(start);
         }
     </script>
 

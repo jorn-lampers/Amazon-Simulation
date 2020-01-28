@@ -37,7 +37,7 @@ namespace Models
 
         public List<CargoSlot> FreeCargoSlots => CargoSlots.Where((CargoSlot slot) => slot.IsAvailable).ToList();
 
-        public List<CargoSlot> OccupiedCargoSlots => CargoSlots.Where((CargoSlot slot) => !slot.IsAvailable).ToList();
+        public List<CargoSlot> OccupiedCargoSlots => CargoSlots.Where((CargoSlot slot) => slot.IsOccupied).ToList();
 
         public bool HasFreeCargoSlots => FreeCargoSlots.Count > 0;
 
@@ -56,7 +56,7 @@ namespace Models
             base.Tick(tick);
             foreach (CargoSlot slot in _cargoSlots) slot.Tick(tick);
 
-            return needsUpdate;
+            return _needsUpdate;
         }
     }
 }

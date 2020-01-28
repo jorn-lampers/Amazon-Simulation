@@ -22,7 +22,7 @@ namespace Models
 
         private bool _discard;
 
-        public bool needsUpdate;
+        protected bool _needsUpdate;
         public string Type { get; }
         public Guid Guid { get; }
         public float X => _x;
@@ -52,7 +52,7 @@ namespace Models
             this._discard = false;
         }
 
-        public void Destroy() => this._discard = true;
+        public virtual void Destroy() => this._discard = true;
         public bool DiscardRequested() => this._discard;
 
         public virtual Vector3 Move(Vector3 pos) => Move(pos.X, pos.Y, pos.Z);
@@ -62,7 +62,7 @@ namespace Models
             this._y = y;
             this._z = z;
 
-            this.needsUpdate = true;
+            this._needsUpdate = true;
 
             return Position;
         }
@@ -74,10 +74,10 @@ namespace Models
             this._rY = rotationY;
             this._rZ = rotationZ;
 
-            needsUpdate = true;
+            _needsUpdate = true;
         }
 
-        public virtual bool Tick(int tick) => this.needsUpdate;
-        public bool NeedsUpdate() => this.needsUpdate;
+        public virtual bool Tick(int tick) => this._needsUpdate;
+        public bool NeedsUpdate() => this._needsUpdate;
     }
 }

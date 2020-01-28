@@ -119,7 +119,7 @@ namespace Models {
         {
             Vector3 target = this.GetCurrentWaypoint();
 
-            if (this.Position.Equals(Destination)) return needsUpdate; // Entity has reached its final pathfinding waypoint
+            if (this.Position.Equals(Destination)) return _needsUpdate; // Entity has reached its final pathfinding waypoint
             else // Move entity proportional to its movementspeed
             {   
                 float distance = this._movementSpeed;
@@ -131,14 +131,14 @@ namespace Models {
                 }
 
                 if (target.Equals(this.Position))// Entity has reached its destination waypoint, no need to move any further
-                    return needsUpdate;
+                    return _needsUpdate;
                 
                 // Move entity over the vector spanned between target position and current position with length == distance
                 Move(this.Position + Vector3.Normalize(target - this.Position) * distance);
             }
 
             // Base class (Entity) determines whether or not a gfx update will be required
-            return needsUpdate;
+            return _needsUpdate;
         }
     }
 }

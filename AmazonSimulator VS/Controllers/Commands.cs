@@ -172,24 +172,10 @@ namespace Controllers {
 
     public class SendShipmentCommand : ServerCommand
     {
-        public int amount = 1;
-
         public override void Execute(World model)
         {
-            Console.WriteLine("Executing command: {0}", this);
-            foreach(Entity u in model.Objects)
-            {
-                if (u is PathfindingEntity)
-                {
-                    PathfindingEntity r = (PathfindingEntity)u;
-                    if (r.IsAtDestination())
-                    {
-                        Random random = new Random();
-                        //Vector3 target = model.RobotGraph.Vertices[random.Next(0, model.RobotGraph.Vertices.Count - 1)];
-                        //r.SetPathfindingTarget(target, model.RobotGraph);
-                    }
-                }
-            }
+            Console.WriteLine("Sending shipment...");
+            model.RunTask(new SendShipmentTask(model));            
         }
     }
 }

@@ -7,5 +7,7 @@ namespace Models {
     {
         bool Tick(int tick);
         bool NeedsUpdate();
+
+        void Destroy();
     }
 }

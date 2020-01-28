@@ -93,10 +93,9 @@ namespace Models
                     if (!_targetEntity.IsAtDestination()) break;
 
                     _state = TaskState.DropOffDestination;
-                    _targetEntity.ReleaseCargo();
                     break;
                 case RobotUnloadTruckTask.TaskState.DropOffDestination:
-                    _destination.SetCargo(_item);
+                    _destination.SetCargo(_targetEntity.ReleaseCargo());
                     _state = TaskState.Finished;
                     this._isFinished = true;
                     break;

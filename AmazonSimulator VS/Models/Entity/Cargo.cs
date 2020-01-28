@@ -4,14 +4,12 @@ namespace Models
 {
     public class CargoSlot 
         : IUpdatable
-        , IOccupiable<Shelf>
     {
         private Vector3 _relativePosition;
         private Shelf _content;
         private Shelf _reservedBy;
 
         // IOccupiable implementation
-        private IReleasable<Shelf> _occupant;
         private ICargoCarrier _parent;
         private bool _needsUpdate;
 
@@ -22,7 +20,7 @@ namespace Models
         }
 
         public Shelf Occupant => _reservedBy;
-        public bool IsOccupied => _occupant != null && !_occupant.IsReleased();
+        public bool IsOccupied => _content != null;
         public bool IsEmpty => _content == null;
         public bool IsAvailable => _content == null && _reservedBy == null;
         public bool IsReserved => _reservedBy != null; 
@@ -33,7 +31,12 @@ namespace Models
 
         public bool SetCargo(Shelf cargo)
         {
-            if (IsAvailable) this._content = cargo;
+            if (IsAvailable)
+                ReserveForCargo(cargo);
+
+            if (IsAvailable || _reservedBy == cargo)
+                this._content = cargo;
+
             else return false;
 
             return true;
@@ -56,20 +59,21 @@ namespace Models
         public Shelf ReleaseCargo()
         {
             Shelf cargo = this._content;
+            if (this.IsReserved && this._reservedBy == cargo) CancelReservation();
             this._content = null;
             return cargo;
         }
 
         public bool Tick(int tick)
         {
-            if (!IsEmpty) Cargo.Move(PositionAbsolute);
+            if (!IsEmpty)
+                Cargo.Move(PositionAbsolute);
             return true;
         }
 
-        public IReleasable<Shelf> Occupy(Shelf occupant)
+        public void Destroy()
         {
-            this._occupant = new DeOccupier<Shelf>(occupant);
-            return this._occupant;
+            if (Cargo != null) Cargo.Destroy();
         }
     }
 }

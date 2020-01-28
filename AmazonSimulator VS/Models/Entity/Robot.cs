@@ -12,11 +12,14 @@ namespace Models
         private CargoSlot _cargo;
         private Queue<SimulationTask<Robot>> _tasks;
         private Graph _graph;
+        private Vector3 _idlePos;
 
         public bool IsStandBy 
             => _tasks.Count == 0;
         public Graph PathfindingGraph 
-            => _graph; 
+            => _graph;
+        public Vector3 IdlePos => _idlePos;
+
 
         public bool HasFreeCargoSlots 
             => _cargo.IsAvailable;
@@ -36,14 +39,25 @@ namespace Models
             _cargo = new CargoSlot(this, new Vector3(0.0f, 0.0f, 0.0f));
             _graph = pathfindingGraph;
             _tasks = new Queue<SimulationTask<Robot>>();
+            _idlePos = Position;
         }
 
-        public void ReleaseCargo()
+        public Shelf ReleaseCargo()
             => this._cargo.ReleaseCargo();
 
         public bool TryAddCargo(Shelf item)
             => this._cargo.SetCargo(item);
-     
+
+        public override Vector3 Move(Vector3 pos)
+        {
+            return base.Move(pos);
+        }
+
+        public override Vector3 Move(float x, float y, float z)
+        {
+            return base.Move(x,y,z);
+        }
+
         public override bool Tick(int tick)
         {
             if (this._tasks.Count > 0)
@@ -53,7 +67,13 @@ namespace Models
             base.Tick(tick);
             _cargo.Tick(tick);
 
-            return needsUpdate;
+            return _needsUpdate;
+        }
+
+        public override void Destroy()
+        {
+            base.Destroy();
+            CargoSlots.ForEach(s => s.Destroy());
         }
     }
 }
