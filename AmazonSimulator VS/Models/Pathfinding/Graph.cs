@@ -11,14 +11,9 @@ namespace Models
         private List<Node> _nodes;
         private List<Edge> _edges;
 
-        public IEnumerable<Vector3> Vertices 
-            => _nodes.Select((n) => n.Position); 
-
-        public IReadOnlyCollection<Node> Nodes 
-            => _nodes.AsReadOnly(); 
-
-        public IReadOnlyCollection<Edge> Edges 
-            => _edges.AsReadOnly(); 
+        public IEnumerable<Vector3> Vertices  => _nodes.Select((n) => n.Position); 
+        public IReadOnlyCollection<Node> Nodes => _nodes.AsReadOnly(); 
+        public IReadOnlyCollection<Edge> Edges => _edges.AsReadOnly(); 
 
         public Graph(Edge[] edges)
         {
@@ -33,32 +28,45 @@ namespace Models
         }
 
         public bool ImpliesNodeAt(Vector3 pos)
-            => DefinesNodeAt(pos)
-            || Vector3.Distance(Graph.NearestImpliedNodeTo(pos, this).Position, pos) == 0f;
-        
-        public bool DefinesNodeAt(Vector3 pos) 
-            => Nodes.Any((n) => n.Position.Equals(pos));
-
-        private Node GetNodeAt(Vector3 pos) 
-            => Nodes.First(n => n.Position.Equals(pos));
-
-        public static Node NearestNodeTo(Vector3 v, Graph g, bool allowImplied = false)
-            => allowImplied && g.DefinesNodeAt(v) 
-            ? Graph.NearestExplicitNodeTo(v, g)
-            : Graph.NearestImpliedNodeTo(v, g); 
-        
-        public static Node NearestExplicitNodeTo(Vector3 v, Graph g)
-            => g.Nodes.OrderBy(n => Vector3.Distance(n, v)).FirstOrDefault();
-
-        public static ImpliedNode NearestImpliedNodeTo(Node n, Graph g)
-            => new ImpliedNode(NearestColinearPointOn(n, g, out Edge edge), edge);
-
-        public static Node NearestImpliedNodeTo(Vector3 v, Graph g) 
-            => new Node(Graph.NearestColinearPointOn(v, g, out Edge edge), edge.Width);
-
-        public static Vector3 NearestColinearPointOn(Vector3 v, Graph g, out Edge edgeOut)
         {
-            var result = g.Edges
+            return DefinesNodeAt(pos) || Vector3.Distance(NearestImpliedNodeTo(pos).Position, pos) == 0f;
+        }
+
+        public bool DefinesNodeAt(Vector3 pos)
+        {
+            return Nodes.Any((n) => n.Position.Equals(pos));
+        }
+
+        private Node GetNodeAt(Vector3 pos)
+        {
+            return Nodes.First(n => n.Position.Equals(pos));
+        }
+
+        public Node NearestNodeTo(Vector3 v, bool allowImplied = false)
+        {
+            return allowImplied && DefinesNodeAt(v)
+            ? NearestExplicitNodeTo(v)
+            : NearestImpliedNodeTo(v);
+        }
+
+        public Node NearestExplicitNodeTo(Vector3 v)
+        {
+            return Nodes.OrderBy(n => Vector3.Distance(n, v)).FirstOrDefault();
+        }
+
+        public ImpliedNode NearestImpliedNodeTo(Node n)
+        {
+            return new ImpliedNode(NearestColinearPointOn(n, out Edge edge), edge);
+        }
+
+        public Node NearestImpliedNodeTo(Vector3 v)
+        {
+            return new Node(NearestColinearPointOn(v, out Edge edge), edge.Width);
+        }
+
+        public Vector3 NearestColinearPointOn(Vector3 v, out Edge edgeOut)
+        {
+            var result = Edges
                 .Select(current => 
                     new {
                         point = LineSegment.NearestColinearPointOn(v, current),
@@ -71,16 +79,16 @@ namespace Models
             return result.point;
         }
 
-        public static List<Node> NodesAdjacentTo(Node v, Graph g)
+        public List<Node> NodesAdjacentTo(Node v)
         {
             if (v is ImpliedNode) return (v as ImpliedNode).Adjacents;
 
-            if (!g.Nodes.Contains(v))
+            if (!Nodes.Contains(v))
                 throw new ArgumentException("Supplied Vertex is not in this Graph.");
 
             List<Node> adjacents = new List<Node>();
 
-            foreach(Edge e in g.Edges)
+            foreach(Edge e in Edges)
             {
                 if(e.A.Position.Equals(v.Position)) adjacents.Add(e.B);
                 else if(e.B.Position.Equals(v.Position)) adjacents.Add(e.A);
@@ -146,18 +154,17 @@ namespace Models
         /// <param name="src">The source node to calculate distances from.</param>
         /// <param name="destination">The target node to calculate distances to.</param>
         /// <returns>A map containing distances from key node to source node and a previous node if applicable.</returns>
-        public static Dictionary<Node, Tuple<double, Node>> DijkstraDistances(Graph graph, Node source)
+        private Dictionary<Node, Tuple<double, Node>> DijkstraDistances(Node source)
         {
-            if(!(source is ImpliedNode) && !graph.Nodes.Contains(source))
+            if(!(source is ImpliedNode) && !Nodes.Contains(source))
                 throw new InvalidOperationException("Node 'src' does not exist on Graph 'graph'.");
 
             Dictionary<Node, double> dist = new Dictionary<Node, double>();
             Dictionary<Node, Node> prev = new Dictionary<Node, Node>();
 
             List<Node> unvisited = new List<Node>(); // Used internally only.
-            var nodes = graph.Nodes;
 
-            foreach (Node n in nodes)
+            foreach (Node n in Nodes)
             {
                 dist[n] = Double.MaxValue;
                 unvisited.Add(n);
@@ -170,7 +177,7 @@ namespace Models
             prev[source] = source;
 
             // Find distances to nodes adjacent to source node
-            foreach(Node a in Graph.NodesAdjacentTo(source, graph))
+            foreach(Node a in NodesAdjacentTo(source))
             {
                 if (Vector3.Distance(a.Position, source.Position) < dist[a])
                 {
@@ -189,7 +196,7 @@ namespace Models
                 Node current = unvisited[0];
                 unvisited.Remove(current);
 
-                foreach (Node a in Graph.NodesAdjacentTo(current, graph))
+                foreach (Node a in NodesAdjacentTo(current))
                 {
                     if (!unvisited.Contains(a)) continue; // No need to update nodes that have already been visited
                     double nDist = dist[current] + (a.Position - current.Position).Length();
@@ -215,24 +222,24 @@ namespace Models
         /// <param name="source">The starting node.</param>
         /// <param name="destination">The target node, if this vertex is not mapped on passed graph, a path to destination via nearest node that is present on graph g is returned.</param>
         /// <returns>A list of vertices representing the shortest path from passed Source Node to Target Node.</returns>
-        public static List<Node> DijkstraShortestPath(Graph graph, Node source, Node destination)
+        public List<Node> DijkstraShortestPath(Node source, Node destination)
         {
             ImpliedNode impliedSource = null;
 
-            if (graph.DefinesNodeAt(source)) { }
-            else if (graph.ImpliesNodeAt(source)) impliedSource = Graph.NearestImpliedNodeTo(source, graph);
+            if (DefinesNodeAt(source)) { }
+            else if (ImpliesNodeAt(source)) impliedSource = NearestImpliedNodeTo(source);
             else throw new InvalidOperationException("Graph does not contain node 'source'!");
             
-            Dictionary<Node, Tuple<double, Node>> data = DijkstraDistances(graph, impliedSource != null ? impliedSource : source);
+            Dictionary<Node, Tuple<double, Node>> data = DijkstraDistances(impliedSource != null ? impliedSource : source);
 
             Node next = null;
             ImpliedNode impliedDestination = null;
             List<Node> path = new List<Node>();
 
-            if (!graph.Nodes.Contains(destination))
+            if (!Nodes.Contains(destination))
             {
                 // Fetch the nearest point on any edge of the graph => implied
-                impliedDestination = Graph.NearestImpliedNodeTo(destination, graph);
+                impliedDestination = NearestImpliedNodeTo(destination);
                 // Add 'implied' node as final destination on graph
                 path.Add(impliedDestination);
 

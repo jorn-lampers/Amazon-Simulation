@@ -39,10 +39,10 @@ namespace Models {
         {
             this._route.Clear();
 
-            Node firstOnGraph = Graph.NearestNodeTo(Position, g);
-            Node lastOnGraph = Graph.NearestNodeTo(target, g);
+            Node firstOnGraph = g.NearestNodeTo(Position);
+            Node lastOnGraph = g.NearestNodeTo(target);
 
-            List<Node> dr = Graph.DijkstraShortestPath(g, firstOnGraph, lastOnGraph);
+            List<Node> dr = g.DijkstraShortestPath(firstOnGraph, lastOnGraph);
             List<Vector3> routeRight = new List<Vector3>();
 
             if (!g.ImpliesNodeAt(Position)) // If current position is not present on graph ...
