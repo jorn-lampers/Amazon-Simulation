@@ -11,7 +11,7 @@ namespace AmazonSimulator_VS
     {
         public static readonly int SIM_TPS = 60;
 
-        public static readonly float RobotSpeed = 20f;
+        public static readonly float RobotSpeed = 7f;
         public static readonly float TruckSpeed = 15f;
 
         public static readonly Vector3[] RobotSpawns = {

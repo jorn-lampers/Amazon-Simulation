@@ -32,6 +32,8 @@ namespace Views
         private Queue<UICommand> commandsOut;
 
         private Dictionary<Guid, ICommandHandle> awaitingResponse;
+        private int bytesSent = 0;
+        private int bytesReceived = 0;
 
         public ClientView(WebSocket socket)
         {
@@ -108,6 +110,8 @@ namespace Views
                 lock(socket)
                 {
                     socket.SendAsync(new ArraySegment<byte>(buffer, 0, message.Length), WebSocketMessageType.Text, true, CancellationToken.None);
+                    bytesSent += message.Length;
+                   
                 }
                 return true;
             }

@@ -10,13 +10,13 @@ namespace Models
     public abstract class Entity 
         : IUpdatable
     {
-        private float _x = 0;
-        private float _y = 0;
-        private float _z = 0;
+        protected float _x = 0;
+        protected float _y = 0;
+        protected float _z = 0;
 
-        private float _rX = 0;
-        private float _rY = 0;
-        private float _rZ = 0;
+        protected float _rX = 0;
+        protected float _rY = 0;
+        protected float _rZ = 0;
 
         protected EntityEnvironmentInfoProvider _environment;
 
