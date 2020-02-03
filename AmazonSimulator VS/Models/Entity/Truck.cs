@@ -16,9 +16,9 @@ namespace Models
         {
             _cargoSlots = new List<CargoSlot>();
 
-            for(int px = -3; px > -13; px--)
+            for(int px = -13; px < -3; px++)
                 for(int pz = -1; pz < 2; pz++)
-                    _cargoSlots.Add(new CargoSlot(this, new Vector3(px, 0f, pz)));
+                    _cargoSlots.Add(new CargoSlot(this, new Vector3(px, 1.5f, pz)));
         }
 
         public List<CargoSlot> CargoSlots 
@@ -38,6 +38,8 @@ namespace Models
 
         public bool IsOccupied 
             => _occupant != null && !_occupant.IsReleased();
+
+        public bool Door => this.Position == Constants.TruckStop;
 
         public IReleasable<Robot> Occupy(Robot occupant)
             => IsOccupied 

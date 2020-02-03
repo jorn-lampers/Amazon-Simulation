@@ -9,9 +9,9 @@
     ]
   },
   {
-    "outputFileName": "wwwroot/js/site.min.js",
+    "outputFileName": "wwwroot/js/main.min.js",
     "inputFiles": [
-      "wwwroot/js/site.js"
+      "wwwroot/js/Main.js"
     ],
     // Optionally specify minification options
     "minify": {

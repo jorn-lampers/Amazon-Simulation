@@ -4,25 +4,71 @@
 <head>
     <meta charset="UTF-8">
     <title>SimulationView</title>
+
+    <style>
+        #viewport {
+            width: 88vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: black;
+        }
+
+        #controls {
+            width: 12vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 88%;
+            background-color: gray;
+        }
+
+        #compass {
+            width: 240px;
+            height: 240px;
+            position: absolute;
+            bottom: 4%;
+            left: 2.2%;
+            border: none;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 
 <body style="margin:0px;padding:0px;overflow:hidden;">
     <!-- JQuery -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 
+    <script src="lib/ResizeSensor.js"></script>
+    <script src="lib/ElementQueries.js"></script>
+
     <!-- Three libs -->
-    <script src="three.min.js"></script>
-    <script src="OrbitControls.js"></script>
-    <script src="OBJLoader.js"></script>
+    <script src="lib/three.js"></script>
+    <script src="lib/OrbitControls.js"></script>
+    <script src="lib/OBJLoader.js"></script>
+
+    <script src="lib/GLTFExporter.js"></script>
+
+    <!-- Three GUI lib -->
+    <script src="lib/dat.gui.min.js"></script>
+
+    <!-- Utility functions -->
+    <script src="js/Utils.js"></script>
+
+    <!-- Arbitrary, UI-related event handlers -->
+    <script src="js/Interfacing.js"></script>
 
     <!-- Model fetcher -->
-    <script src="Models.js"></script>
+    <script src="js/Models.js"></script>
 
-    <!-- Model editor -->
-    <script src="ModelBuilder.js"></script>
+    <!-- Model builder -->
+    <script src="js/ModelBuilder.js"></script>
 
     <!-- Client entrypoint -->
-    <script src="Main.js"></script>
-</body >
+    <script src="js/Main.js"></script>
+
+    <div id="viewport"></div>
+</body>
 
 </html >

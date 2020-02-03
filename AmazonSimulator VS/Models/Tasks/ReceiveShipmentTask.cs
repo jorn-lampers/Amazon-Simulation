@@ -165,6 +165,7 @@ namespace Models
                 case TaskState.WaitTruckLoaded:
                     List<Robot> idleRobots = _targetEntity.ObjectsOfType<Robot>().Where((r) => r.IsStandBy).ToList();
                     List<CargoSlot> availableStorageSlots = _truck.FreeCargoSlots;
+                    availableStorageSlots.Reverse();
                     if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
                     RobotLoadTruckTask rt = new RobotLoadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);

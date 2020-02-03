@@ -9,9 +9,9 @@ namespace AmazonSimulator_VS
 {
     public static class Constants
     {
-        public static readonly int SIM_TPS = 60;
+        public static readonly int SIM_TPS = 40;
 
-        public static readonly float RobotSpeed = 7f;
+        public static readonly float RobotSpeed = 15f;
         public static readonly float TruckSpeed = 15f;
 
         public static readonly Vector3[] RobotSpawns = {
@@ -22,9 +22,9 @@ namespace AmazonSimulator_VS
             new Vector3(-5f, 0f, -5f)
         };
 
-        public static readonly Vector3 TruckSpawn = new Vector3(-50f, 0f, 25f);
-        public static readonly Vector3 TruckStop = new Vector3(15f, 0f, 25f);
-        public static readonly Vector3 TruckDespawn = new Vector3(50f, 0f, 25f);
+        public static readonly Vector3 TruckSpawn = new Vector3(50f, -1.5f, 25f);
+        public static readonly Vector3 TruckStop = new Vector3(13.5f, -1.5f, 25f);
+        public static readonly Vector3 TruckDespawn = new Vector3(50f, -1.5f, 25f);
 
         public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 26f);
         public static readonly Vector3 RobotExitTruck = new Vector3(-5.0f, 0f, 24f);
