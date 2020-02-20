@@ -6,13 +6,42 @@
     <title>SimulationView</title>
 
     <style>
+        #overlay {
+            width: 88vw;
+            height: 15vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: black;
+            opacity: 0.8;
+            overflow-y: scroll;
+
+        }
+
+        #log {
+        }
+
+        p {
+            margin: 1px;
+            color: white;
+        }
+
+        input {
+            width: 99%;
+            background-color: black;
+            border: 1px solid white;
+            color: white;
+            top: 10px;
+            margin: 0 auto;
+        }
+
         #viewport {
             width: 88vw;
             height: 100vh;
             position: absolute;
             top: 0;
             left: 0;
-            background-color: black;
+            background-color: deepskyblue;
         }
 
         #controls {
@@ -68,7 +97,54 @@
     <!-- Client entrypoint -->
     <script src="js/Main.js"></script>
 
-    <div id="viewport"></div>
+    <div id="viewport">
+
+    </div>
+
+    <div id="overlay">
+        <input id="input" />
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        let input = $( '#input' );
+        input.keypress( function ( event )
+        {
+
+            if ( event.keyCode == 13 || event.which == 13 ) 
+            {
+                event.preventDefault();
+
+                let val = input.val();
+
+                if ( val == '' ) return;
+
+                input.val( '' );
+
+                INTERFACING.Log( '>> ' + val, '0xffff00' );
+
+                switch ( val.toLowerCase() )
+                {
+                    case 'receive':
+                        sendCommand( "ReceiveShipmentCommand", {} );
+                        break;
+
+                    case 'send':
+                        sendCommand( "SendShipmentCommand", {} );
+                        break;
+
+                    default:
+                        INTERFACING.Log( 'Unknown command: "' + val + '"', 'red' );
+                        break;
+                }
+
+            }
+
+        } );
+
+    </script>
+
 </body>
 
 </html >

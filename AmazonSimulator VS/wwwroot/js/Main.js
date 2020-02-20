@@ -25,25 +25,21 @@ function sendCommand(type = "ViewCommand", args) {
     socket.send(msg);
 }
 
-window.onload = function () {
-    function onKeyDown(e) {
-        switch ( e.key )
+window.onload = function () 
+{
+
+    function onKeyDown( e ) 
+    {
+
+        console.log(e.keyCode);
+
+        if ( e.keyCode == 192 || e.which == 192 )
         {
-            case "m":
-                var args = {};
-                args.target = { x: selectedVertex.geometry.vertices[0].x, y: selectedVertex.geometry.vertices[0].y, z: selectedVertex.geometry.vertices[0].z };
-                sendCommand("TestCommand", args);
-                break;
 
-            case "t":
-                sendCommand("ReceiveShipmentCommand", {});
-                break;
-
-            case "y":
-                sendCommand("SendShipmentCommand", {});
-                break;
+            $('#overlay').toggle( 250 );
 
         }
+
     };
 
     function create( parameters )
@@ -78,6 +74,9 @@ window.onload = function () {
 
     function init() 
     {
+
+        INTERFACING.Log( "Initializing viewport", "yellow" );
+
         viewport = document.getElementById( 'viewport' );
 
         // Renderer setup
@@ -89,8 +88,6 @@ window.onload = function () {
         renderer.setSize( viewport.clientWidth, viewport.clientHeight );
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-        viewport.appendChild( renderer.domElement );
 
         // Initialize default camera
         camera = new THREE.PerspectiveCamera( 70, viewport.clientWidth / viewport.clientHeight, 0.2, 1000 );
@@ -134,12 +131,22 @@ window.onload = function () {
 
         viewport.addEventListener( 'dblclick', function ()
         {
-            if ( intersects.objects.length > 0 )
+            if ( intersects.objects.length > 0 ) 
+            {
+
                 selected = intersects.objects[UTILS.NearestIndex( intersects )];
 
-            else
+            }
+
+            else 
+            {
+
                 selected = null;
+
+            }
         } );
+
+        viewport.appendChild( renderer.domElement );
     }
 
     function initSocket(onConnect) {
@@ -165,18 +172,21 @@ window.onload = function () {
 
                 if ( command.parameters.Type == "truck" && command.parameters.Door != null )
                 {
-                    console.log( "Update truck..." );
                     let door = scene.getObjectByName( "Trailer_Box_Door" );
-                    console.log( JSON.stringify( door ) );
-                    if ( command.parameters.Door ) door.rotation.x = - Math.PI * 0.5;
-                    else door.rotation.x = 0;
+
+                    if ( command.parameters.Door )
+                        door.rotation.x = - Math.PI * 0.5;
+
+                    else
+                        door.rotation.x = 0;
                 }
 
                 object.rotation.x = command.parameters.RotationX;
                 object.rotation.y = command.parameters.RotationY;
                 object.rotation.z = command.parameters.RotationZ;
+
             } else if (command.command == "DiscardModel3DCommand") {
-                console.log("Discarding: " + JSON.stringify(command.parameters));
+                INTERFACING.Log("Discarding: " + JSON.stringify(command.parameters), 'white');
                 scene.remove(worldObjects[command.parameters]);
                 delete worldObjects[command.parameters];
             }
@@ -184,7 +194,9 @@ window.onload = function () {
 
         socket.onerror = function (event) 
         {
-            console.log("A websocket error occured!" + event);
+
+            INTERFACING.Log( "A websocket error occured!" + event, 'red' );
+
         }
 
         socket.onopen = onConnect;
@@ -196,52 +208,66 @@ window.onload = function () {
         // Tick OrbitControls, this is required when you want camera smoothing
         if ( cameraControls.update() || mouse.pollUpdate() )
         {
+
             // Update raycaster with respect to updated camera pos
             raycaster.setFromCamera( mouse.getPosition(), camera );
+
         }
 
         // Render the scene
         renderer.render( scene, camera );
 
         // When objects move autonomously, they might intersect with an un-updated ray
-        //intersects = UTILS.FindIntersects( raycaster, Object.values( worldObjects ) );    
         intersects = UTILS.FindIntersects( raycaster, Object.values( worldObjects ) );
 
         // Render any potential box helper over the scene
         for ( const i of intersects.objects )
         {
+
             if ( i.hitbox == null ) continue;
+
             renderer.render( i.hitboxDisplay, camera );
+
         }
 
         // Render any potential box helper over the scene
         if ( selected != null )
         {
             if ( selected.hitboxDisplay != null ) 
+            {
+
                 renderer.render( selected.hitboxDisplay, camera );
+
+            }
         }
 
         requestAnimationFrame( render );
     }
 
     var ts = performance.now();
+
     function timer()
     {
         let diff = performance.now() - ts;
+
         ts = performance.now();
         return diff;
+
     }
 
 
     init();
-    console.log("Scene initialized! (" + timer() + " ms)");
+    INTERFACING.Log( "Scene initialized! (" + timer() + " ms)", 'green' );
 
     render();
-    console.log("Animation loop started! (" + timer() + " ms)")
+    INTERFACING.Log( "Animation loop started! (" + timer() + " ms)", 'green' )
 
     MODELS.LoadModels(['truck', 'shelf'], () => {
-        console.log("3D models loaded! (" + timer() + " ms)");
-        initSocket(() => console.log("Connected to back-end! (" + timer() + " ms)"));
+
+        INTERFACING.Log( "3D models loaded! (" + timer() + " ms)" , 'green' );
+
+        initSocket( () => INTERFACING.Log( "Connected to back-end! (" + timer() + " ms)", 'green' ) );
+
     });
 
 }
