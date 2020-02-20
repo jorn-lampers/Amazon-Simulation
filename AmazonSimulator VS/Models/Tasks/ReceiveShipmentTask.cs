@@ -168,9 +168,12 @@ namespace Models
                     availableStorageSlots.Reverse();
                     if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
-                    RobotLoadTruckTask rt = new RobotLoadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
-                    idleRobots[0].AssignTask(rt);
-                    _robotTasks.Add(rt);
+                    if (_slotsToUnload.Count != 0)
+                    {
+                        RobotLoadTruckTask rt = new RobotLoadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
+                        idleRobots[0].AssignTask(rt);
+                        _robotTasks.Add(rt);
+                    }
 
                     if (_slotsToUnload.Count == 0) _state = TaskState.WaitCargoTasksFinished;
                     break;

@@ -1,12 +1,5 @@
 ﻿var INTERFACING =
 {
-    // Logs a message in the console
-    Log: function ( message, color = '0xffffff' )
-    {
-
-        $( '#log' ).prepend( '<p ' + "style='color: " + color + ";'" + '>' + message + '</p>' );
-
-    },
 
     // A function returning.... another function :)
     StartResizeHandler: function ( target, camera, renderer )

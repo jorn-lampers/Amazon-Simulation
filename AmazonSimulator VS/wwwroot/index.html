@@ -107,43 +107,8 @@
         <div id="log"></div>
     </div>
 
-    <script>
-        let input = $( '#input' );
-        input.keypress( function ( event )
-        {
-
-            if ( event.keyCode == 13 || event.which == 13 ) 
-            {
-                event.preventDefault();
-
-                let val = input.val();
-
-                if ( val == '' ) return;
-
-                input.val( '' );
-
-                INTERFACING.Log( '>> ' + val, '0xffff00' );
-
-                switch ( val.toLowerCase() )
-                {
-                    case 'receive':
-                        sendCommand( "ReceiveShipmentCommand", {} );
-                        break;
-
-                    case 'send':
-                        sendCommand( "SendShipmentCommand", {} );
-                        break;
-
-                    default:
-                        INTERFACING.Log( 'Unknown command: "' + val + '"', 'red' );
-                        break;
-                }
-
-            }
-
-        } );
-
-    </script>
+    <!-- Console widget for sending of command and reading of logs -->
+    <script src="js/Console.js"></script>
 
 </body>
 

@@ -31,8 +31,6 @@ window.onload = function ()
     function onKeyDown( e ) 
     {
 
-        console.log(e.keyCode);
-
         if ( e.keyCode == 192 || e.which == 192 )
         {
 
@@ -75,7 +73,7 @@ window.onload = function ()
     function init() 
     {
 
-        INTERFACING.Log( "Initializing viewport", "yellow" );
+        Log( "Initializing viewport", "yellow" );
 
         viewport = document.getElementById( 'viewport' );
 
@@ -186,7 +184,7 @@ window.onload = function ()
                 object.rotation.z = command.parameters.RotationZ;
 
             } else if (command.command == "DiscardModel3DCommand") {
-                INTERFACING.Log("Discarding: " + JSON.stringify(command.parameters), 'white');
+                Log("Discarding: " + JSON.stringify(command.parameters), 'white');
                 scene.remove(worldObjects[command.parameters]);
                 delete worldObjects[command.parameters];
             }
@@ -195,7 +193,7 @@ window.onload = function ()
         socket.onerror = function (event) 
         {
 
-            INTERFACING.Log( "A websocket error occured!" + event, 'red' );
+            Log( "A websocket error occured!" + event, 'red' );
 
         }
 
@@ -257,16 +255,16 @@ window.onload = function ()
 
 
     init();
-    INTERFACING.Log( "Scene initialized! (" + timer() + " ms)", 'green' );
+    Log( "Scene initialized! (" + timer() + " ms)", 'green' );
 
     render();
-    INTERFACING.Log( "Animation loop started! (" + timer() + " ms)", 'green' )
+    Log( "Animation loop started! (" + timer() + " ms)", 'green' )
 
     MODELS.LoadModels(['truck', 'shelf'], () => {
 
-        INTERFACING.Log( "3D models loaded! (" + timer() + " ms)" , 'green' );
+        Log( "3D models loaded! (" + timer() + " ms)" , 'green' );
 
-        initSocket( () => INTERFACING.Log( "Connected to back-end! (" + timer() + " ms)", 'green' ) );
+        initSocket( () => Log( "Connected to back-end! (" + timer() + " ms)", 'green' ) );
 
     });
 
