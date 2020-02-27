@@ -35,6 +35,8 @@
             this.hitbox = new THREE.Box3();
             this.hitbox.setFromCenterAndSize( center, this.size );
 
+            //this.hitbox.applyMatrix4( model.matrixWorld );
+
             this.hitboxDisplay = new THREE.Box3Helper( this.hitbox, 0xff0000 );
             this.hitboxDisplay.updateMatrixWorld( true );
         }

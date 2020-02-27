@@ -12,12 +12,12 @@ namespace Models
         private IReleasable<Robot> _occupant;
 
         public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) 
-            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed)
+            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed, 5f, Constants.TruckAccelleration)
         {
             _cargoSlots = new List<CargoSlot>();
 
-            for(int px = -13; px < -3; px++)
-                for(int pz = -1; pz < 2; pz++)
+            for(int pz = -13; pz < -3; pz++)
+                for(int px = -1; px < 2; px++)
                     _cargoSlots.Add(new CargoSlot(this, new Vector3(px, 1.5f, pz)));
         }
 

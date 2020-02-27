@@ -11,7 +11,10 @@ namespace AmazonSimulator_VS
     {
         public static readonly int SIM_TPS = 40;
 
-        public static readonly float RobotSpeed = 15f;
+        public static readonly float RobotAccelleration = 0.1f;
+        public static readonly float TruckAccelleration = 0.2f;
+
+        public static readonly float RobotSpeed = 8f;
         public static readonly float TruckSpeed = 15f;
 
         public static readonly Vector3[] RobotSpawns = {
@@ -22,11 +25,11 @@ namespace AmazonSimulator_VS
             new Vector3(-5f, 0f, -5f)
         };
 
-        public static readonly Vector3 TruckSpawn = new Vector3(50f, -1.5f, 25f);
+        public static readonly Vector3 TruckSpawn = new Vector3(-50f, -1.5f, 25f);
         public static readonly Vector3 TruckStop = new Vector3(13.5f, -1.5f, 25f);
         public static readonly Vector3 TruckDespawn = new Vector3(50f, -1.5f, 25f);
 
-        public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 26f);
+        public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 24f);
         public static readonly Vector3 RobotExitTruck = new Vector3(-5.0f, 0f, 24f);
 
         public static readonly float LaneWidth = 2.0f;
@@ -74,14 +77,14 @@ namespace AmazonSimulator_VS
 
         public static readonly Vector3[] StoragePositions =
         {
-            new Vector3(-4f, 0.01f, 2.5f),
-            new Vector3(+4f, 0.01f, 2.5f),
+            new Vector3(-4f, 0f, 2.5f),
+            new Vector3(+4f, 0f, 2.5f),
 
-            new Vector3(-4f, 0.01f, 7.5f),
-            new Vector3(+4f, 0.01f, 7.5f),
+            new Vector3(-4f, 0f, 7.5f),
+            new Vector3(+4f, 0f, 7.5f),
 
-            new Vector3(-4f, 0.01f, 12.5f),
-            new Vector3(+4f, 0.01f, 12.5f)
+            new Vector3(-4f, 0f, 12.5f),
+            new Vector3(+4f, 0f, 12.5f)
         };
     }
 

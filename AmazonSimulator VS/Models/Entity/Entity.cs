@@ -33,7 +33,9 @@ namespace Models
         public float RotationX => _rX;
         public float RotationY => _rY;
         public float RotationZ => _rZ;
-        public Vector3 Rotation => new Vector3(_rX, _rY, _rZ); 
+        public Vector3 Rotation => new Vector3(_rX, _rY, _rZ);
+
+        public Vector3 Forward => Vector3.Transform(new Vector3(0f, 0f, -1.0f), Matrix4x4.CreateFromYawPitchRoll(_rY, _rX, _rZ));
 
         public Entity(string type, EntityEnvironmentInfoProvider parent, float x = 0.0f, float y = 0f, float z = 0f, float rotationX = 0f, float rotationY = 0f, float rotationZ = 0f)
         {

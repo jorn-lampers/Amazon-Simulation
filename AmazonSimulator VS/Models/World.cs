@@ -53,6 +53,8 @@ namespace Models
 
             _worldObjects.Add(new GraphDisplay(this, _robotPathfindingGraph));
 
+            //CreateTruck(new Vector3(0, 0, 0), 9);
+
             foreach (Vector3 s in Constants.RobotSpawns)
                 CreateRobot(s);
         }
@@ -103,17 +105,20 @@ namespace Models
             return r;
         }
 
-        public Truck CreateTruck(Vector3 pos, bool cargo)
+        public Truck CreateTruck(Vector3 pos, int cargo)
         {
             return CreateTruck(pos.X, pos.Y, pos.Z, cargo);
         }
 
-        public Truck CreateTruck(float x, float y, float z, bool cargo)
+        public Truck CreateTruck(float x, float y, float z, int cargo)
         {
             Truck t = new Truck(this,x,y,z,0,0,0);
             _worldObjects.Add(t);
 
-            if(cargo) t.CargoSlots.ForEach(s => s.SetCargo(CreateShelf()));
+            if (cargo > t.CargoSlots.Count) cargo = t.CargoSlots.Count;
+
+            for(int i = 0; i < cargo; i++)
+                t.CargoSlots[i].SetCargo(CreateShelf());
 
 
             return t;

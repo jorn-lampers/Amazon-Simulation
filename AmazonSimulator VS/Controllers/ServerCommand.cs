@@ -31,19 +31,23 @@ namespace Controllers
 
     public class ReceiveShipmentCommand : ServerCommand
     {
+        public int amount;
+
         public override void Execute(World model)
         {
             Console.WriteLine("Receiving shipment...");
-            model.RunTask(new ReceiveShipmentTask(model));
+            model.RunTask(new ReceiveShipmentTask(model, amount));
         }
     }
 
     public class SendShipmentCommand : ServerCommand
     {
+        public int amount;
+
         public override void Execute(World model)
         {
             Console.WriteLine("Sending shipment...");
-            model.RunTask(new SendShipmentTask(model));
+            model.RunTask(new SendShipmentTask(model, amount));
         }
     }
 }

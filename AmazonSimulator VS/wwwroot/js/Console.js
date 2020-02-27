@@ -24,26 +24,40 @@ input.keypress( function ( event )
 
         event.preventDefault();
 
+        // Fetch string typed in input
         let val = input.val();
 
+        // Ignore enter if nothing has been typed in console
         if ( val == '' ) return;
 
+        // Reset console input
         input.val( '' );
 
+        // Split each word in input
+        let spl = val.split( ' ' );
+
+        // Command name is the first word
+        let cmd = spl[0].toLowerCase();
+
+        // Arguments are the rest, if any 
+        let args = spl.slice(1, spl.length);
+
+        // Display entered command in log
         Log( '>> ' + val, '0xffff00' );
 
-        switch ( val.toLowerCase() )
+
+        switch ( cmd )
         {
             case 'help':
-                Log( 'Available commands: "send", "Receive"' );
+                consoleHelp( args );
                 break;
 
             case 'receive':
-                sendCommand( "ReceiveShipmentCommand", {} );
+                consoleReceive( args );
                 break;
 
             case 'send':
-                sendCommand( "SendShipmentCommand", {} );
+                consoleSend( args );
                 break;
 
             default:
@@ -55,3 +69,34 @@ input.keypress( function ( event )
     }
 
 } );
+
+function consoleHelp( args )
+{
+
+    Log( 'Available commands: "send", "Receive"' );
+
+}
+
+function consoleReceive( args )
+{
+
+    let amount = 1;
+
+    if ( args.length > 0 && args )
+        amount = parseInt( args[0] );
+
+    sendCommand( "ReceiveShipmentCommand", { amount: amount } );
+
+}
+
+function consoleSend( args )
+{
+
+    let amount = 1;
+
+    if ( args.length > 0 && args )
+        amount = parseInt( args[0] );
+
+    sendCommand( "SendShipmentCommand", { amount: amount }  );
+
+}

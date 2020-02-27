@@ -25,7 +25,7 @@ namespace Models
         public bool IsAvailable => _content == null && _reservedBy == null;
         public bool IsReserved => _reservedBy != null; 
         public Shelf Cargo => _content; 
-        public Vector3 PositionAbsolute => _parent.Position + _relativePosition;
+        public Vector3 PositionAbsolute => _parent.Position + Vector3.Transform(_relativePosition, Matrix4x4.CreateFromYawPitchRoll(_parent.Rotation.Y, _parent.Rotation.X, _parent.Rotation.Z));
 
         public bool NeedsUpdate(bool evaluateOnly = false)
         {
@@ -75,7 +75,10 @@ namespace Models
         public bool Tick(int tick)
         {
             if (!IsEmpty && _parent.NeedsUpdate(true))
+            {
                 Cargo.Move(PositionAbsolute);
+                Cargo.Rotate(_parent.Rotation.X, _parent.Rotation.Y, _parent.Rotation.Z);
+            }
 
             return true;
         }

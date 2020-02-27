@@ -9,8 +9,8 @@ namespace Models
     {
         private PolygonalFootprint _footprint;
 
-        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond)
-            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ, movementPerSecond)
+        public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond, float rotationPerSecond, float accelerationPerSecond)
+            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ, movementPerSecond, rotationPerSecond, accelerationPerSecond)
         {
             this._footprint = new PolygonalFootprint(
                 this, 
@@ -37,7 +37,10 @@ namespace Models
             base.Move(x, y, z);
 
             if (_environment.GetCollisions(this).Count > 0)
+            {
                 Move(oldPos);
+                this._velocity = 0f;
+            }
 
             return Position;
         }

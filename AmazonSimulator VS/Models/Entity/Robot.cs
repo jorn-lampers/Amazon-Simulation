@@ -35,7 +35,7 @@ namespace Models
             => _tasks.Enqueue(task);
 
         public Robot(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, Graph pathfindingGraph) 
-            : base("robot", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.RobotSpeed)
+            : base("robot", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.RobotSpeed, 5f, Constants.RobotAccelleration)
         {
             _cargo = new CargoSlot(this, new Vector3(0.0f, 0.0f, 0.0f));
             _graph = pathfindingGraph;

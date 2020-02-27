@@ -26,7 +26,7 @@
 CreateTruck = function () {
     var truck = MODELS.GetModelInstance('truck');
 
-    truck.rotation.y = 0.5 * Math.PI;
+    //truck.rotation.y = 0.5 * Math.PI;
     truck.position.y = 1.5;
 
     var group = new THREE.Group();
@@ -90,6 +90,7 @@ CreateStorage = function (length, width) {
         ])
     );
     a.position.z = 0.5 * length - 0.5 * bordersize;
+    a.position.y += 0.01;
     a.rotation.x = 0.5 * Math.PI;
     group.add(a);
 
@@ -99,7 +100,8 @@ CreateStorage = function (length, width) {
             new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
         ])
     );
-    b.position.z = -(0.5 * length - 0.5 * bordersize);
+    b.position.z = - ( 0.5 * length - 0.5 * bordersize );
+    b.position.y += 0.01;
     b.rotation.x = 0.5 * Math.PI;
     group.add(b);
 
@@ -110,6 +112,7 @@ CreateStorage = function (length, width) {
         ])
     );
     c.position.x = 0.5 * width - 0.5 * bordersize;
+    c.position.y += 0.01;
     c.rotation.x = 0.5 * Math.PI;
     group.add(c);
 
@@ -119,7 +122,8 @@ CreateStorage = function (length, width) {
             new THREE.MeshBasicMaterial({ color: "#ffff00", side: THREE.DoubleSide })
         ])
     );
-    d.position.x = -(0.5 * width - 0.5 * bordersize);
+    d.position.x = -( 0.5 * width - 0.5 * bordersize ); 0
+    d.position.y += 0.01;
     d.rotation.x = 0.5 * Math.PI;
     group.add(d);
     group.name = "Storage";

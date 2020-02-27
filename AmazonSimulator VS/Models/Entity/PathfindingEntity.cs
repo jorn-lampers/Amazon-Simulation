@@ -9,20 +9,29 @@ namespace Models {
     {
         private List<Vector3> _route = new List<Vector3>();
 
-        private float _movementSpeed;
+        private float _acceleration;
+        private float _maxMovementSpeed;
+        protected float _velocity = 0;
+
+        private float _rotationSpeed;
+
         private int _currentWaypoint;
 
-        public float MovementSpeed => _movementSpeed; // In units per second.
+        public float MovementSpeed => _maxMovementSpeed; // In units per second.
+        public float RotationSpeed => _rotationSpeed;
+        public float Velocity => _velocity;
         public List<Vector3> Route => _route; 
         public Vector3? Destination
             => _route.Count > 0 
             ? _route.Last() 
             : Position;
 
-        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond)
+        public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond, float rotationPerSecond, float accelerationPerSecond)
             : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
         {
-            this._movementSpeed = movementPerSecond / Constants.SIM_TPS;
+            this._maxMovementSpeed = movementPerSecond / Constants.SIM_TPS;
+            this._rotationSpeed = rotationPerSecond / Constants.SIM_TPS;
+            this._acceleration = accelerationPerSecond / Constants.SIM_TPS;
         }
 
         public void SetPathfindingTarget(Vector3 target)
@@ -121,9 +130,31 @@ namespace Models {
 
             if (this.Position.Equals(Destination)) return _needsUpdate; // Entity has reached its final pathfinding waypoint
             else // Move entity proportional to its movementspeed
-            {   
-                float distance = this._movementSpeed;
-                if ((target-this.Position).Length() < this._movementSpeed)
+            {
+                if (!target.Equals(this.Position))
+                {
+                    var tDir = Vector3.Normalize(target - this.Position);
+                    var cDir = Forward;
+
+                    var cross2 = Vector3.Cross(tDir, cDir);
+
+                    float pi = (float)Math.PI * 0.5f;
+                    float deltaRY = Math.Min(Math.Max(cross2.Y * pi, -RotationSpeed), RotationSpeed);
+
+                    this.Rotate(this.RotationX, this.RotationY + deltaRY, this.RotationZ);
+
+                    if (cross2.Length() > 0.001)
+                    {
+                        _velocity = 0f;
+                        return _needsUpdate;
+                    }
+                }
+
+                // Accelerate velocity by acceleration if top speed has not been reached
+                this._velocity += Math.Min(this._acceleration, this._maxMovementSpeed - this._velocity);
+
+                float distance = this._velocity;
+                if ((target-this.Position).Length() < this._velocity)
                 {   // If Entity's distance moved this tick exceeds the distance to the next waypoint ...
                     Move((float)target.X, (float)target.Y, (float)target.Z); // ... move to next waypoint ...
                     distance -= (target - this.Position).Length(); // ... calculate remaining distance to move ...

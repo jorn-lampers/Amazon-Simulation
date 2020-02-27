@@ -12,6 +12,7 @@ namespace Models
         List<CargoSlot> OccupiedCargoSlots { get; }
         bool HasFreeCargoSlots { get; }
         Vector3 Position { get; }
+        Vector3 Rotation { get; }
 
         bool TryAddCargo(Shelf item);
 
