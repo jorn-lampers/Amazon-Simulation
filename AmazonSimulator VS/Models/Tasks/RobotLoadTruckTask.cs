@@ -66,13 +66,13 @@ namespace Models
                 case RobotLoadTruckTask.TaskState.AwaitTruckAvailable:
                     if (_truck.IsOccupied) break;
                     _lock = _truck.Occupy(_targetEntity);
-                    _targetEntity.SetPathfindingTarget(_destination.PositionAbsolute);
+                    _targetEntity.SetTarget(_destination.PositionAbsolute);
                     _state = TaskState.DropOffDestination;
                     break;
                 case RobotLoadTruckTask.TaskState.DropOffDestination:
                     if (!_targetEntity.IsAtDestination()) break;
                     _destination.SetCargo(_targetEntity.CargoSlots[0].ReleaseCargo());
-                    _targetEntity.SetPathfindingTarget(Constants.RobotExitTruck);
+                    _targetEntity.SetTarget(Constants.RobotExitTruck);
                     _state = TaskState.LeaveTruck;
                     break;
                 case RobotLoadTruckTask.TaskState.LeaveTruck:

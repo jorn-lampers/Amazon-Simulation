@@ -5,46 +5,33 @@ using System.Linq;
 using System.Numerics;
 
 namespace Models {
-    public abstract class PathfindingEntity : Entity
+
+    public abstract class PathfindingEntity : DisplacingEntity
     {
         private List<Vector3> _route = new List<Vector3>();
-
-        private float _acceleration;
-        private float _maxMovementSpeed;
-        protected float _velocity = 0;
-
-        private float _rotationSpeed;
-
         private int _currentWaypoint;
-
-        public float MovementSpeed => _maxMovementSpeed; // In units per second.
-        public float RotationSpeed => _rotationSpeed;
-        public float Velocity => _velocity;
-        public List<Vector3> Route => _route; 
-        public Vector3? Destination
-            => _route.Count > 0 
-            ? _route.Last() 
-            : Position;
+        public List<Vector3> Route => _route;
+        public Vector3 Destination
+            => _route.Count > 0
+            ? _route.Last()
+            : _target;
 
         public PathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond, float rotationPerSecond, float accelerationPerSecond)
-            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)
-        {
-            this._maxMovementSpeed = movementPerSecond / Constants.SIM_TPS;
-            this._rotationSpeed = rotationPerSecond / Constants.SIM_TPS;
-            this._acceleration = accelerationPerSecond / Constants.SIM_TPS;
-        }
+            : base(type, parent, x, y, z, rotationX, rotationY, rotationZ, movementPerSecond, rotationPerSecond, accelerationPerSecond)
+        { }
 
-        public void SetPathfindingTarget(Vector3 target)
+        public void ClearPathfindingTarget()
         {
             this._route.Clear();
-            this._route.Add(target);
-
-            this._currentWaypoint = 0;
+            this._currentWaypoint = -1;
         }
 
         public void SetPathfindingTarget(Vector3 target, Graph g)
         {
             this._route.Clear();
+            this._route.Add(target);
+
+            this._currentWaypoint = 0;
 
             Node firstOnGraph = g.NearestNodeTo(Position);
             Node lastOnGraph = g.NearestNodeTo(target);
@@ -77,7 +64,7 @@ namespace Models {
                     pOff = (pRight * pEdge.Width * 0.5f);
                 }
 
-                if(i+1 < dr.Count)
+                if (i + 1 < dr.Count)
                 {
                     c = dr[i + 1];
                     Edge nEdge = new Edge(b, c, Math.Min(b.Width, c.Width));
@@ -104,71 +91,40 @@ namespace Models {
         }
 
         public Vector3 GetCurrentWaypoint(bool MaintainRight = false)
-            => (this._route.Count == 0 || _currentWaypoint == -1) 
+            => (this._route.Count == 0 || _currentWaypoint == -1)
             ? this.Position
             : this._route[_currentWaypoint];
 
         public Vector3 NextWaypoint()
         {
+            if (_currentWaypoint == -1) return _target;
+
             _currentWaypoint++;
 
-            if(_currentWaypoint == _route.Count)
+            if (_currentWaypoint == _route.Count)
             {
                 _route.Clear();
                 _currentWaypoint = -1;
             }
 
-            return GetCurrentWaypoint();
-        }        
+            SetTarget(GetCurrentWaypoint());
+
+            return _target;
+        }
 
         public bool IsAtDestination()
             => this.Destination.Equals(this.Position);
 
         public override bool Tick(int tick)
         {
-            Vector3 target = this.GetCurrentWaypoint();
+            base.Tick(tick);
 
-            if (this.Position.Equals(Destination)) return _needsUpdate; // Entity has reached its final pathfinding waypoint
-            else // Move entity proportional to its movementspeed
-            {
-                if (!target.Equals(this.Position))
-                {
-                    var tDir = Vector3.Normalize(target - this.Position);
-                    var cDir = Forward;
+            if (this.Position.Equals(Destination)) // Entity has reached its final pathfinding waypoint
+                ClearPathfindingTarget();
 
-                    var cross2 = Vector3.Cross(tDir, cDir);
+            else if (_target.Equals(this.Position)) // Entity has reached a waypoint, cycle to the next waypoint
+                NextWaypoint();
 
-                    float pi = (float)Math.PI * 0.5f;
-                    float deltaRY = Math.Min(Math.Max(cross2.Y * pi, -RotationSpeed), RotationSpeed);
-
-                    this.Rotate(this.RotationX, this.RotationY + deltaRY, this.RotationZ);
-
-                    if (cross2.Length() > 0.001)
-                    {
-                        _velocity = 0f;
-                        return _needsUpdate;
-                    }
-                }
-
-                // Accelerate velocity by acceleration if top speed has not been reached
-                this._velocity += Math.Min(this._acceleration, this._maxMovementSpeed - this._velocity);
-
-                float distance = this._velocity;
-                if ((target-this.Position).Length() < this._velocity)
-                {   // If Entity's distance moved this tick exceeds the distance to the next waypoint ...
-                    Move((float)target.X, (float)target.Y, (float)target.Z); // ... move to next waypoint ...
-                    distance -= (target - this.Position).Length(); // ... calculate remaining distance to move ...
-                    target = NextWaypoint(); // ... and cycle to the next waypoint.
-                }
-
-                if (target.Equals(this.Position))// Entity has reached its destination waypoint, no need to move any further
-                    return _needsUpdate;
-                
-                // Move entity over the vector spanned between target position and current position with length == distance
-                Move(this.Position + Vector3.Normalize(target - this.Position) * distance);
-            }
-
-            // Base class (Entity) determines whether or not a gfx update will be required
             return _needsUpdate;
         }
     }

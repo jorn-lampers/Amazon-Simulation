@@ -6,7 +6,7 @@ using System.Numerics;
 
 namespace Models
 {
-    public class Truck : PathfindingEntity, ICargoCarrier, IOccupiable<Robot>
+    public class Truck : DisplacingEntity, ICargoCarrier, IOccupiable<Robot>
     {
         private List<CargoSlot> _cargoSlots;
         private IReleasable<Robot> _occupant;

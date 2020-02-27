@@ -70,7 +70,7 @@ namespace Models
                     if (Truck.IsOccupied) break;
 
                     _lock = Truck.Occupy(Robot);
-                    _targetEntity.SetPathfindingTarget(Cargo.Position);
+                    _targetEntity.SetTarget(Cargo.Position);
                     _state = TaskState.MoveToCargo;
                     break;
                 case RobotUnloadTruckTask.TaskState.MoveToCargo:
@@ -78,7 +78,7 @@ namespace Models
                     break;
                 case RobotUnloadTruckTask.TaskState.PickupCargo:
                     if (!_targetEntity.TryAddCargo(_item)) break;
-                    _targetEntity.SetPathfindingTarget(Constants.RobotExitTruck);
+                    _targetEntity.SetTarget(Constants.RobotExitTruck);
                     _state = TaskState.LeaveTruck;
                     break;
                 case RobotUnloadTruckTask.TaskState.LeaveTruck:

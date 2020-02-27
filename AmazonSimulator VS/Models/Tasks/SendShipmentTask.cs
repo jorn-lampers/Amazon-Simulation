@@ -58,13 +58,13 @@ namespace Models
             {
                 case TaskState.Init:
                     _truck = _targetEntity.CreateTruck(Constants.TruckSpawn, 0);
-                    _truck.SetPathfindingTarget(Constants.TruckStop, _targetEntity.TruckGraph);
+                    _truck.SetTarget(Constants.TruckStop);
 
                     this._state = TaskState.WaitTruckArrival;
                     break;
 
                 case TaskState.WaitTruckArrival:
-                    if (!_truck.IsAtDestination()) break;
+                    if (!_truck.IsAtTarget) break;
                     var occupied = _targetEntity.ObjectsOfType<StoragePlot>().SelectMany(plot => plot.OccupiedCargoSlots).ToList();
                     _slotsToUnload = new Queue<CargoSlot>(occupied.Take(Math.Min(Math.Min(occupied.Count(), _truck.FreeCargoSlots.Count), amount)));
                     _robotTasks = new List<RobotLoadTruckTask>();
@@ -89,12 +89,12 @@ namespace Models
 
                 case TaskState.WaitCargoTasksFinished:
                     if (!_robotTasks.All((task) => task.IsFinished)) break;
-                    _truck.SetPathfindingTarget(Constants.TruckDespawn, _targetEntity.TruckGraph);
+                    _truck.SetTarget(Constants.TruckDespawn);
                     _state = TaskState.WaitTruckExit;
                     break;
 
                 case TaskState.WaitTruckExit:
-                    if (!_truck.IsAtDestination()) break;
+                    if (!_truck.IsAtTarget) break;
                     _truck.Destroy();
                     _state = TaskState.Finished;
                     break;
