@@ -1,102 +1,110 @@
-﻿let input = $( '#input' );
-let messageID = 0;
+﻿let messageID = 0;
 
-// Logs a message in the console
-var Log = function ( message, color = '0xffffff' )
+var CONSOLE =
 {
 
-    let iName = 'no' + messageID;
-    let el = '<p id="' + iName + '" ' + "style='display: none; color: " + color + ";'" + '>' + message + '</p>';
-
-    $( '#log' ).prepend( el );
-
-    $( '#' + iName ).toggle( 100 );
-
-    messageID++;
-
-}
-
-input.keypress( function ( event )
-{
-
-    if ( event.keyCode == 13 || event.which == 13 ) 
+    // Logs a message in the console
+    Log: function ( message, color = '0xffffff' )
     {
 
-        event.preventDefault();
+        let iName = 'no' + messageID;
+        let el = '<p id="' + iName + '" ' + "style='display: none; color: " + color + ";'" + '>' + message + '</p>';
 
-        // Fetch string typed in input
-        let val = input.val();
+        $( '#log' ).prepend( el );
 
-        // Ignore enter if nothing has been typed in console
-        if ( val == '' ) return;
+        $( '#' + iName ).toggle( 100 );
 
-        // Reset console input
-        input.val( '' );
+        messageID++;
 
-        // Split each word in input
-        let spl = val.split( ' ' );
+    },
 
-        // Command name is the first word
-        let cmd = spl[0].toLowerCase();
+    ConsoleHelp: function ( args )
+    {
 
-        // Arguments are the rest, if any 
-        let args = spl.slice(1, spl.length);
+        CONSOLE.Log( 'Available commands: "send", "Receive"' );
 
-        // Display entered command in log
-        Log( '>> ' + val, '0xffff00' );
+    },
 
+    CommandReceiveShipment: function ( args )
+    {
 
-        switch ( cmd )
-        {
-            case 'help':
-                consoleHelp( args );
-                break;
+        let amount = 1;
 
-            case 'receive':
-                consoleReceive( args );
-                break;
+        if ( args.length > 0 && args )
+            amount = parseInt( args[0] );
 
-            case 'send':
-                consoleSend( args );
-                break;
+        CONSOLE.Log( 'Receiving a shipment with size of ' + amount );
+        sendCommand( "ReceiveShipmentCommand", { amount: amount } );
 
-            default:
-                Log( 'Unknown command: "' + val + '"', 'red' );
-                Log( 'Type "help" to display a list of commands' );
-                break;
-        }
+    },
+
+    CommandSendShipment: function ( args )
+    {
+
+        let amount = 1;
+
+        if ( args.length > 0 && args )
+            amount = parseInt( args[0] );
+
+        CONSOLE.Log( 'Sending a shipment with max size of ' + amount );
+        sendCommand( "SendShipmentCommand", { amount: amount } );
 
     }
+}
 
+$( document ).ready( function ()
+{
+    $( '#input' ).keypress( function ( event )
+    {
+
+        if ( event.keyCode == 13 || event.which == 13 ) 
+        {
+
+            event.preventDefault();
+
+            // Fetch string typed in input
+            let val = $( '#input' ).val();
+
+            // Ignore enter if nothing has been typed in console
+            if ( val == '' ) return;
+
+            // Reset console input
+            $( '#input' ).val( '' );
+
+            // Split each word in input
+            let spl = val.split( ' ' );
+
+            // Command name is the first word
+            let cmd = spl[0].toLowerCase();
+
+            // Arguments are the rest, if any 
+            let args = spl.slice( 1, spl.length );
+
+            // Display entered command in log
+            CONSOLE.Log( '>> ' + val, '0xffff00' );
+
+
+            switch ( cmd )
+            {
+                case 'help':
+                    consoleHelp( args );
+                    break;
+
+                case 'receive':
+                    CONSOLE.CommandReceiveShipment( args );
+                    break;
+
+                case 'send':
+                    CONSOLE.CommandSendShipment( args );
+                    break;
+
+                default:
+                    CONSOLE.Log( 'Unknown command: "' + val + '"', 'red' );
+                    CONSOLE.Log( 'Type "help" to display a list of commands' );
+                    break;
+            }
+
+        }
+
+    } );
 } );
-
-function consoleHelp( args )
-{
-
-    Log( 'Available commands: "send", "Receive"' );
-
-}
-
-function consoleReceive( args )
-{
-
-    let amount = 1;
-
-    if ( args.length > 0 && args )
-        amount = parseInt( args[0] );
-
-    sendCommand( "ReceiveShipmentCommand", { amount: amount } );
-
-}
-
-function consoleSend( args )
-{
-
-    let amount = 1;
-
-    if ( args.length > 0 && args )
-        amount = parseInt( args[0] );
-
-    sendCommand( "SendShipmentCommand", { amount: amount }  );
-
-}

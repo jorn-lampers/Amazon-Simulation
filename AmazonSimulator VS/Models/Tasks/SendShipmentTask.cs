@@ -57,7 +57,7 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn, 0);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, (float)(0.5 * Math.PI), 0f, 0);
                     _truck.SetTarget(Constants.TruckStop);
 
                     this._state = TaskState.WaitTruckArrival;
@@ -72,6 +72,7 @@ namespace Models
                     break;
 
                 case TaskState.WaitTruckLoaded:
+                    _truck.setDoorOpen(true);
                     List<Robot> idleRobots = _targetEntity.ObjectsOfType<Robot>().Where((r) => r.IsStandBy).ToList();
                     List<CargoSlot> availableStorageSlots = _truck.FreeCargoSlots;
                     availableStorageSlots.Reverse();
@@ -91,6 +92,7 @@ namespace Models
                     if (!_robotTasks.All((task) => task.IsFinished)) break;
                     _truck.SetTarget(Constants.TruckDespawn);
                     _state = TaskState.WaitTruckExit;
+                    _truck.setDoorOpen(false);
                     break;
 
                 case TaskState.WaitTruckExit:

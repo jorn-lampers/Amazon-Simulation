@@ -1,20 +1,8 @@
-﻿CreateRobot = function () {
-    var robot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.9, 0.3, 0.9),
-        new THREE.MeshFaceMaterial([
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //LEFT
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_side.png"), side: THREE.DoubleSide }),    //RIGHT
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_top.png"), side: THREE.DoubleSide }),     //TOP
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_bottom.png"), side: THREE.DoubleSide }),  //BOTTOM
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //FRONT
-            new THREE.MeshPhongMaterial({ map: new THREE.TextureLoader().load("textures/robot_front.png"), side: THREE.DoubleSide }),   //BACK
-        ])
-    );
+﻿CreateRobot = function ()
+{
+    var robot = MODELS.GetModelInstance( 'robot' );
 
-    robot.position.y = 0.16;
-
-    robot.castShadow = true;
-    robot.receiveShadow = true;
+    robot.position.y = 0.25;
 
     var group = new THREE.Group();
     group.add(robot);
@@ -26,12 +14,71 @@
 CreateTruck = function () {
     var truck = MODELS.GetModelInstance('truck');
 
-    //truck.rotation.y = 0.5 * Math.PI;
     truck.position.y = 1.5;
 
+    // Encapsulate loaded model into a group
     var group = new THREE.Group();
     group.add(truck);
     group.name = "Truck";
+
+    let door = group.getObjectByName( "Trailer_Box_Door" );
+
+    // Declare functions to help animate opening and closing of the trailer's rear door.
+    group.openDoor = function ( )
+    {
+
+        if ( door.animator != null ) clearTimeout( door.animator );
+
+        door.animator = setInterval(
+
+            function ()
+            {
+
+                let target = - Math.PI * 0.5;
+
+                door.rotation.x -= 0.01
+
+                if ( door.rotation.x <= target )
+                {   // If animation finishes ...
+                    door.rotation.x = target;
+                    clearTimeout( door.animator );
+                }
+
+            },
+
+            1000 / 60 // 60 frames per second
+
+        );
+
+    }
+
+    group.closeDoor = function ( )
+    {
+
+        if ( door.animator != null ) clearTimeout( door.animator );
+
+        door.animator = setInterval(
+
+            function ()
+            {
+
+                let target = 0;
+
+                door.rotation.x += 0.01
+
+                if ( door.rotation.x >= target )
+                {   // If animation finishes ...
+                    door.rotation.x = target;
+                    clearTimeout( door.animator );
+                }
+
+            },
+
+            1000 / 60 // 60 frames per second
+
+        );
+
+    }
 
     return group;
 }

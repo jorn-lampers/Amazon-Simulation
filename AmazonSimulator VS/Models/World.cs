@@ -33,7 +33,7 @@ namespace Models
             this._simulationTask = null;
 
             foreach (Vector3 pos in Constants.StoragePositions)
-                CreateStoragePlot(pos.X, pos.Y, pos.Z, Constants.StoragePlotLength, Constants.StoragePlotWidth);
+                CreateStoragePlot(pos.X, pos.Y, pos.Z, 0, 0, 0, Constants.StoragePlotLength, Constants.StoragePlotWidth);
 
             _robotPathfindingGraph = new Graph(Constants.GraphEdges);
             _truckPathfindingGraph = new Graph(
@@ -53,10 +53,8 @@ namespace Models
 
             _worldObjects.Add(new GraphDisplay(this, _robotPathfindingGraph));
 
-            //CreateTruck(new Vector3(0, 0, 0), 9);
-
             foreach (Vector3 s in Constants.RobotSpawns)
-                CreateRobot(s);
+                CreateRobot(s.X, s.Y, s.Z);
         }
 
         public bool RunTask(SimulationTask<World> task)
@@ -92,27 +90,17 @@ namespace Models
                 .Select(et => et as T)
                 .ToList();
         }
-
-        private Robot CreateRobot(Vector3 s)
-        {
-            return CreateRobot(s.X, s.Y, s.Z);
-        }
         
-        public Robot CreateRobot(float x, float y, float z)
+        public Robot CreateRobot(float x = 0f, float y = 0f, float z = 0f, float rx = 0f, float ry = 0f, float rz = 0f)
         {
-            Robot r = new Robot(this,x,y,z,0,0,0,_robotPathfindingGraph);
+            Robot r = new Robot(this,x,y,z,rx,ry,rz,_robotPathfindingGraph);
             _worldObjects.Add(r);
             return r;
         }
 
-        public Truck CreateTruck(Vector3 pos, int cargo)
+        public Truck CreateTruck(float x = 0f, float y = 0f, float z = 0f, float rx = 0f, float ry = 0f, float rz = 0f, int cargo = 0)
         {
-            return CreateTruck(pos.X, pos.Y, pos.Z, cargo);
-        }
-
-        public Truck CreateTruck(float x, float y, float z, int cargo)
-        {
-            Truck t = new Truck(this,x,y,z,0,0,0);
+            Truck t = new Truck(this,x,y,z, rx, ry, rz);
             _worldObjects.Add(t);
 
             if (cargo > t.CargoSlots.Count) cargo = t.CargoSlots.Count;
@@ -124,16 +112,16 @@ namespace Models
             return t;
         }
 
-        public StoragePlot CreateStoragePlot(float x, float y, float z, int length, int width)
+        public StoragePlot CreateStoragePlot(float x, float y, float z, float rx = 0f, float ry = 0f, float rz = 0f, int length = 5, int width = 2)
         {
-            StoragePlot p = new StoragePlot(this, length, width, x, y, z, 0, 0, 0);
+            StoragePlot p = new StoragePlot(this, length, width, x, y, z, rx, ry, rz);
             _worldObjects.Add(p);
             return p;
         }
 
-        public Shelf CreateShelf(float x = 0f, float y = 0f, float z = 0f)
+        public Shelf CreateShelf(float x = 0f, float y = 0f, float z = 0f, float rx = 0f, float ry = 0f, float rz = 0f)
         {
-            Shelf s = new Shelf(this, x, y, z);
+            Shelf s = new Shelf(this, x, y, z, rx, ry, rz);
             _worldObjects.Add(s);
             return s;
         }

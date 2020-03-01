@@ -10,6 +10,7 @@ namespace Models
     {
         private List<CargoSlot> _cargoSlots;
         private IReleasable<Robot> _occupant;
+        private bool _doorOpen = false;
 
         public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) 
             : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed, 5f, Constants.TruckAccelleration)
@@ -39,7 +40,7 @@ namespace Models
         public bool IsOccupied 
             => _occupant != null && !_occupant.IsReleased();
 
-        public bool Door => this.Position == Constants.TruckStop;
+        public bool Door => _doorOpen;
 
         public IReleasable<Robot> Occupy(Robot occupant)
             => IsOccupied 
@@ -63,6 +64,13 @@ namespace Models
         {
             base.Destroy();
             CargoSlots.ForEach(s => s.Destroy());
+        }
+
+        public void setDoorOpen(bool open)
+        {
+            if(_doorOpen != open) this._needsUpdate = true;
+
+            _doorOpen = open;
         }
     }
 }

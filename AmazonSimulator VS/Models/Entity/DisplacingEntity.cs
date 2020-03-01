@@ -12,6 +12,7 @@ namespace Models
 
         private float _acceleration;
         private float _maxMovementSpeed;
+
         protected float _velocity = 0;
 
         private float _rotationSpeed;

@@ -34,7 +34,9 @@ window.onload = function ()
         if ( e.keyCode == 192 || e.which == 192 )
         {
 
+            e.preventDefault();
             $('#overlay').toggle( 250 );
+            $( '#input' ).focus();
 
         }
 
@@ -73,7 +75,7 @@ window.onload = function ()
     function init() 
     {
 
-        Log( "Initializing viewport", "yellow" );
+        CONSOLE.Log( "Initializing viewport", "yellow" );
 
         viewport = document.getElementById( 'viewport' );
 
@@ -170,13 +172,11 @@ window.onload = function ()
 
                 if ( command.parameters.Type == "truck" && command.parameters.Door != null )
                 {
-                    let door = scene.getObjectByName( "Trailer_Box_Door" );
 
                     if ( command.parameters.Door )
-                        door.rotation.x = - Math.PI * 0.5;
-
+                        object.openDoor( );
                     else
-                        door.rotation.x = 0;
+                        object.closeDoor( );
                 }
 
                 object.rotation.x = command.parameters.RotationX;
@@ -184,7 +184,7 @@ window.onload = function ()
                 object.rotation.z = command.parameters.RotationZ;
 
             } else if (command.command == "DiscardModel3DCommand") {
-                Log("Discarding: " + JSON.stringify(command.parameters), 'white');
+                CONSOLE.Log("Discarding: " + JSON.stringify(command.parameters), 'white');
                 scene.remove(worldObjects[command.parameters]);
                 delete worldObjects[command.parameters];
             }
@@ -193,7 +193,7 @@ window.onload = function ()
         socket.onerror = function (event) 
         {
 
-            Log( "A websocket error occured!" + event, 'red' );
+            CONSOLE.Log( "A websocket error occured!" + event, 'red' );
 
         }
 
@@ -253,18 +253,17 @@ window.onload = function ()
 
     }
 
-
     init();
-    Log( "Scene initialized! (" + timer() + " ms)", 'green' );
+    CONSOLE.Log( "Scene initialized! (" + timer() + " ms)", 'green' );
 
     render();
-    Log( "Animation loop started! (" + timer() + " ms)", 'green' )
+    CONSOLE.Log( "Animation loop started! (" + timer() + " ms)", 'green' );
 
     MODELS.LoadModels(['truck', 'shelf'], () => {
 
-        Log( "3D models loaded! (" + timer() + " ms)" , 'green' );
+        CONSOLE.Log( "3D models loaded! (" + timer() + " ms)" , 'green' );
 
-        initSocket( () => Log( "Connected to back-end! (" + timer() + " ms)", 'green' ) );
+        initSocket( () => CONSOLE.Log( "Connected to back-end! (" + timer() + " ms)", 'green' ) );
 
     });
 

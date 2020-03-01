@@ -21,8 +21,26 @@ var MODELS =
             {
                 MODELS[name] = MODELS.Loader.parse(data);
                 if (MODELS.ModelsLoaded(names)) callback();
-            });
+            } );
         }
+
+        let loader = new THREE.GLTFLoader();
+
+        path = '/models/robot/model.json';
+
+        console.log( "Loading glb: " + path );
+
+        loader.load( path, function ( gltf )
+        {
+            console.log( "glb " + path + " has been loaded!" );
+            MODELS['robot'] = gltf.scene;
+
+        }, undefined, function ( error )
+            {
+
+                console.error( error );
+
+            } );
     },
     GetModelInstance: (name) => MODELS[name].clone(),
 }

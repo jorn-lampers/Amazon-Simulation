@@ -57,7 +57,7 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn, amount);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, (float) (0.5 * Math.PI), 0f, amount);
                     
                     _truck.SetTarget(Constants.TruckStop);
 
@@ -66,6 +66,7 @@ namespace Models
 
                 case TaskState.WaitTruckArrival:
                     if (!_truck.IsAtTarget) break;
+                    _truck.setDoorOpen(true);
                     _slotsToUnload = new Queue<CargoSlot>(_truck.OccupiedCargoSlots);
                     _robotTasks = new List<RobotUnloadTruckTask>();
                     this._state = TaskState.WaitTruckUnloaded;
@@ -85,6 +86,7 @@ namespace Models
 
                 case TaskState.WaitCargoTasksFinished:
                     if (!_robotTasks.All((task) => task.IsFinished)) break;
+                    _truck.setDoorOpen(false);
                     _truck.SetTarget(Constants.TruckDespawn);
                     _state = TaskState.WaitTruckExit;
                     break;
