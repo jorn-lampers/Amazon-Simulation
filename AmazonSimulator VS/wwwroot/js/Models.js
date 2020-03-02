@@ -1,7 +1,6 @@
 var MODELS =
 {
     Loader: new THREE.ObjectLoader(),
-    Names: ['shelf', 'truck'],
     ModelsLoaded: (names) =>
     {
         for (let i = 0; i < names.length; i++)
@@ -11,22 +10,10 @@ var MODELS =
     },
     LoadModels: (names, callback) => 
     {
-        for (let i = 0; i < names.length; i++) 
-        {
-            let name = names[i];
-            let path = '/models/' + name + '/model.json';
-            console.log("loading model " + path);
-
-            $.getJSON(path, function (data)
-            {
-                MODELS[name] = MODELS.Loader.parse(data);
-                if (MODELS.ModelsLoaded(names)) callback();
-            } );
-        }
 
         let loader = new THREE.GLTFLoader();
 
-        path = '/models/robot/model.json';
+        let path = '/models/robot/model.glb.json';
 
         console.log( "Loading glb: " + path );
 
@@ -35,12 +22,53 @@ var MODELS =
             console.log( "glb " + path + " has been loaded!" );
             MODELS['robot'] = gltf.scene;
 
+            if ( MODELS.ModelsLoaded( [ 'truck', 'robot', 'shelf' ] ) ) callback();
+
         }, undefined, function ( error )
             {
 
                 console.error( error );
 
-            } );
+            }
+        );
+
+        path = '/models/shelf/model.glb.json';
+
+        console.log( "Loading glb: " + path );
+
+        loader.load( path, function ( gltf )
+        {
+            console.log( "glb " + path + " has been loaded!" );
+            MODELS['shelf'] = gltf.scene;
+
+            if ( MODELS.ModelsLoaded( ['truck', 'robot', 'shelf'] ) ) callback();
+
+        }, undefined, function ( error )
+            {
+
+                console.error( error );
+
+            }
+        );
+
+        path = '/models/truck/model.glb.json';
+
+        console.log( "Loading glb: " + path );
+
+        loader.load( path, function ( gltf )
+        {
+            console.log( "glb " + path + " has been loaded!" );
+            MODELS['truck'] = gltf.scene;
+
+            if ( MODELS.ModelsLoaded( ['truck', 'robot', 'shelf'] ) ) callback();
+
+        }, undefined, function ( error )
+            {
+
+                console.error( error );
+
+            }
+        );
     },
     GetModelInstance: (name) => MODELS[name].clone(),
 }
