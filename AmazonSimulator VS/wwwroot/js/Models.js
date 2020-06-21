@@ -1,5 +1,6 @@
 var MODELS =
 {
+    animations: {},
     Loader: new THREE.ObjectLoader(),
     ModelsLoaded: (names) =>
     {
@@ -8,67 +9,31 @@ var MODELS =
 
         return true;
     },
-    LoadModels: (names, callback) => 
-    {
+    LoadModels: (names, callback) => {
 
         let loader = new THREE.GLTFLoader();
 
-        let path = '/models/robot/model.glb.json';
+        for (let i = 0; i < names.length; i++) {
+            let path = '/models/' + names[i] + '/model.glb.json';
 
-        console.log( "Loading glb: " + path );
+            //CONSOLE.Log("Loading glb: " + path);
 
-        loader.load( path, function ( gltf )
-        {
-            console.log( "glb " + path + " has been loaded!" );
-            MODELS['robot'] = gltf.scene;
+            loader.load(path, function (gltf) {
+                CONSOLE.Log("glb " + path + " has been loaded!");
 
-            if ( MODELS.ModelsLoaded( [ 'truck', 'robot', 'shelf' ] ) ) callback();
+                MODELS[names[i]] = gltf.scene;
+                MODELS.animations[names[i]] = gltf.animations;
 
-        }, undefined, function ( error )
-            {
+                if (MODELS.ModelsLoaded(names)) callback();
 
-                console.error( error );
+            }, undefined, function (error) {
 
-            }
-        );
+                console.error(error);
 
-        path = '/models/shelf/model.glb.json';
+            });
+        }
 
-        console.log( "Loading glb: " + path );
-
-        loader.load( path, function ( gltf )
-        {
-            console.log( "glb " + path + " has been loaded!" );
-            MODELS['shelf'] = gltf.scene;
-
-            if ( MODELS.ModelsLoaded( ['truck', 'robot', 'shelf'] ) ) callback();
-
-        }, undefined, function ( error )
-            {
-
-                console.error( error );
-
-            }
-        );
-
-        path = '/models/truck/model.glb.json';
-
-        console.log( "Loading glb: " + path );
-
-        loader.load( path, function ( gltf )
-        {
-            console.log( "glb " + path + " has been loaded!" );
-            MODELS['truck'] = gltf.scene;
-
-            if ( MODELS.ModelsLoaded( ['truck', 'robot', 'shelf'] ) ) callback();
-
-        }, undefined, function ( error )
-            {
-
-                console.error( error );
-
-            }
-        );
     },
     GetModelInstance: (name) => MODELS[name].clone(),
+    GetAnimations: (name) => MODELS.animations[name] // Do i really need to clone these ?
 }

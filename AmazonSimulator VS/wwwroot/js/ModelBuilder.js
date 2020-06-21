@@ -11,74 +11,16 @@
     return group;
 }
 
-CreateTruck = function () {
+CreateTruck = function ()
+{
     var truck = MODELS.GetModelInstance('truck');
-
-    truck.position.y = 1.5;
 
     // Encapsulate loaded model into a group
     var group = new THREE.Group();
     group.add(truck);
     group.name = "Truck";
 
-    let door = group.getObjectByName( "Trailer_Box_Door" );
-
-    // Declare functions to help animate opening and closing of the trailer's rear door.
-    group.openDoor = function ( )
-    {
-
-        if ( door.animator != null ) clearTimeout( door.animator );
-
-        door.animator = setInterval(
-
-            function ()
-            {
-
-                let target = - Math.PI * 0.5;
-
-                door.rotation.x -= 0.01
-
-                if ( door.rotation.x <= target )
-                {   // If animation finishes ...
-                    door.rotation.x = target;
-                    clearTimeout( door.animator );
-                }
-
-            },
-
-            1000 / 60 // 60 frames per second
-
-        );
-
-    }
-
-    group.closeDoor = function ( )
-    {
-
-        if ( door.animator != null ) clearTimeout( door.animator );
-
-        door.animator = setInterval(
-
-            function ()
-            {
-
-                let target = 0;
-
-                door.rotation.x += 0.01
-
-                if ( door.rotation.x >= target )
-                {   // If animation finishes ...
-                    door.rotation.x = target;
-                    clearTimeout( door.animator );
-                }
-
-            },
-
-            1000 / 60 // 60 frames per second
-
-        );
-
-    }
+    //group.rotation.y = -0.5 * Math.PI;
 
     return group;
 }
@@ -178,23 +120,4 @@ CreateStorage = function (length, width) {
     return group;
 }
 
-CreateEntity = function (command)
-{
-    let e;
-    if (command.parameters.Type == "robot") {
-        e = CreateRobot();
-    } else if (command.parameters.Type == "storage") {
-        e = CreateStorage(command.parameters.Length, command.parameters.Width);
-    } else if (command.parameters.Type == "shelf") {
-        e = CreateShelf();
-    } else if (command.parameters.Type == "graphdisplay") {
-        e = CreateGraph(command.parameters);
-    } else if (command.parameters.Type == "target") {
-        e = CreateRobot();
-        e.name = "target";
-    } else if (command.parameters.Type == "truck") {
-        e = CreateTruck();
-    }
-    return e;
-}
 

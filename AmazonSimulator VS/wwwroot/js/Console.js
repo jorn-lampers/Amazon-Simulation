@@ -43,11 +43,28 @@ var CONSOLE =
 
         let amount = 1;
 
-        if ( args.length > 0 && args )
+        if ( args && args.length > 0 )
             amount = parseInt( args[0] );
 
         CONSOLE.Log( 'Sending a shipment with max size of ' + amount );
         sendCommand( "SendShipmentCommand", { amount: amount } );
+
+    },
+
+    CommandAnimate: function ( args )
+    {
+
+      let index = 0;
+
+      if ( args.length > 0 ) index = parseInt( args[0] );
+
+      let reversed = false;
+
+      if ( args.length > 1 && args[1] == "reversed" ) reversed = true;
+
+      CONSOLE.Log('Running animation # ' + index + (reversed ? " reversed" : ""));
+      runAnimation( index, reversed );
+
 
     }
 }
@@ -96,6 +113,10 @@ $( document ).ready( function ()
 
                 case 'send':
                     CONSOLE.CommandSendShipment( args );
+                    break;
+
+                case 'animate':
+                    CONSOLE.CommandAnimate(args);
                     break;
 
                 default:

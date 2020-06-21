@@ -25,9 +25,9 @@ namespace AmazonSimulator_VS
             new Vector3(-5f, 0f, -5f)
         };
 
-        public static readonly Vector3 TruckSpawn = new Vector3(-50f, -1.5f, 25f);
+        public static readonly Vector3 TruckSpawn = new Vector3(13.5f, -1.5f, 150f);
         public static readonly Vector3 TruckStop = new Vector3(13.5f, -1.5f, 25f);
-        public static readonly Vector3 TruckDespawn = new Vector3(50f, -1.5f, 25f);
+        public static readonly Vector3 TruckDespawn = new Vector3(13.5f, -1.5f, 150f);
 
         public static readonly Vector3 RobotEnterTruck = new Vector3(-6.5f, 0f, 24f);
         public static readonly Vector3 RobotExitTruck = new Vector3(-5.0f, 0f, 24f);

@@ -60,7 +60,8 @@
             bottom: 4%;
             left: 2.2%;
             border: none;
-            opacity: 0.8;
+            opacity: 0.7;
+            background-color: #101010;
         }
     </style>
 </head>
@@ -75,7 +76,7 @@
     <!-- Three libs -->
     <script src="lib/three.js"></script>
     <script src="lib/OrbitControls.js"></script>
-    <script src="lib/OBJLoader.js"></script>
+
     <script src="lib/GLTFLoader.js"></script>
 
     <script src="lib/GLTFExporter.js"></script>
@@ -98,18 +99,20 @@
     <!-- Client entrypoint -->
     <script src="js/Main.js"></script>
 
-    <div id="viewport">
-
-    </div>
+    <div id="viewport"></div>
 
     <div id="overlay">
         <input id="input" />
-
         <div id="log"></div>
     </div>
 
+    <div id="controls"></div>
+
     <!-- Console widget for sending of command and reading of logs -->
     <script src="js/Console.js"></script>
+
+    <iframe id="compass" src="compass.html"></iframe>
+
 
 </body>
 

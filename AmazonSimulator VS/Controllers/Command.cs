@@ -13,7 +13,7 @@ namespace Controllers
 {
     public abstract class Command
     {
-        public Guid id;
+        protected Guid id;
         public string type { get { return this.GetType().Name; } }
         protected Object parameters;
 

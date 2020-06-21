@@ -51,18 +51,20 @@ namespace Models
                 var cross2 = Vector3.Cross(tDir, cDir);
 
                 float pi = (float)Math.PI * 0.5f;
-                float deltaRY = Math.Min(Math.Max(cross2.Y * pi, -RotationSpeed), RotationSpeed);
-
-                this.Rotate(this.RotationX, this.RotationY + deltaRY, this.RotationZ);
-
-                if (cross2.Length() > 0.001)
+                if(RotationSpeed != 0f)
                 {
-                    _velocity = 0f;
-                    return _needsUpdate;
+                    float deltaRY = Math.Min(Math.Max(cross2.Y * pi, -RotationSpeed), RotationSpeed);
+
+                    this.Rotate(this.RotationX, this.RotationY + deltaRY, this.RotationZ);
+
+                    // If entity hasn't alligned with target direction vector yet, wait until it has
+                    if (cross2.Length() > 0.001)
+                    {
+                        _velocity = 0f;
+                        return _needsUpdate;
+                    }
                 }
-
-
-
+ 
                 // Accelerate velocity by acceleration if top speed has not been reached
                 this._velocity += Math.Min(this._acceleration, this._maxMovementSpeed - this._velocity);
 

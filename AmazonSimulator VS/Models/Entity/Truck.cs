@@ -13,7 +13,7 @@ namespace Models
         private bool _doorOpen = false;
 
         public Truck(EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ) 
-            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed, 5f, Constants.TruckAccelleration)
+            : base("truck", parent, x, y, z, rotationX, rotationY, rotationZ, Constants.TruckSpeed, 0f, Constants.TruckAccelleration)
         {
             _cargoSlots = new List<CargoSlot>();
 
