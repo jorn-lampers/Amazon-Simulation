@@ -43,10 +43,8 @@ namespace Models
 
         public override bool Tick(int tick)
         {
-            // If Entity is not at its target position ...
             if (!_target.Equals(this.Position))
             {
-                // Find direction towards target
                 var tDir = Vector3.Normalize(_target - this.Position);
                 var cDir = Forward;
 

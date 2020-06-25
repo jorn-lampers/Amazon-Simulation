@@ -57,7 +57,7 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, 0f, 0f, amount);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, (float) (0.5 * Math.PI), 0f, amount);
                     
                     _truck.SetTarget(Constants.TruckStop);
 
@@ -73,16 +73,15 @@ namespace Models
                     break;
 
                 case TaskState.WaitTruckUnloaded:
-                    if (_slotsToUnload.Count == 0) _state = TaskState.WaitCargoTasksFinished;
-
                     List<Robot> idleRobots = _targetEntity.ObjectsOfType<Robot>().Where((r) => r.IsStandBy).ToList();
                     List<CargoSlot> availableStorageSlots = _targetEntity.ObjectsOfType<StoragePlot>().SelectMany(plot => plot.FreeCargoSlots).ToList();
-                    if (idleRobots.Count == 0 || availableStorageSlots.Count == 0 || _state != TaskState.WaitTruckUnloaded) break;
+                    if (idleRobots.Count == 0 || availableStorageSlots.Count == 0) break;
 
                     RobotUnloadTruckTask rt = new RobotUnloadTruckTask(idleRobots[0], _truck, _slotsToUnload.Dequeue().ReleaseCargo(), availableStorageSlots[0]);
                     idleRobots[0].AssignTask(rt);
                     _robotTasks.Add(rt);
 
+                    if (_slotsToUnload.Count == 0) _state = TaskState.WaitCargoTasksFinished;
                     break;
 
                 case TaskState.WaitCargoTasksFinished:

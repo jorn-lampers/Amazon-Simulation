@@ -57,7 +57,7 @@ namespace Models
             switch (_state)
             {
                 case TaskState.Init:
-                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, 0f, 0f, 0);
+                    _truck = _targetEntity.CreateTruck(Constants.TruckSpawn.X, Constants.TruckSpawn.Y, Constants.TruckSpawn.Z, 0f, (float)(0.5 * Math.PI), 0f, 0);
                     _truck.SetTarget(Constants.TruckStop);
 
                     this._state = TaskState.WaitTruckArrival;
