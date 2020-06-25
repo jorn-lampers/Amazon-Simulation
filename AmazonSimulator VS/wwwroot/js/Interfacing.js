@@ -1,69 +1,57 @@
-﻿var INTERFACING =
+﻿import * as THREE from '../lib/three.module.js';
+
+export function Mouse( target )
 {
 
-    // A function returning.... another function :)
-    StartResizeHandler: function ( target, camera, renderer )
+    var position = new THREE.Vector2( 0, 0 );
+
+    var updateSinceLastPoll = false;
+
+    var target = target;
+
+    var pollUpdate = function ( resetUpdate = true )
     {
-        new ResizeSensor(
+        let update = updateSinceLastPoll;
 
-            target,
-
-            function ()
-            {
-
-                camera.aspect = target.clientWidth / target.clientHeight;
-                camera.updateProjectionMatrix();
-
-                renderer.setSize( target.clientWidth, target.clientHeight );
-
-            }
-
-        );
-    },
-
-    Mouse: function (target)
-    {
-        let position = new THREE.Vector2( 0, 0 );
-
-        let updateSinceLastPoll = false;
-
-        function onMouseMove( event )
+        // Don't reset ___updateSinceLastPoll when caller explicitly requests this
+        if ( !resetUpdate )
         {
 
-            updateSinceLastPoll = true;
-
-            position.x = ( event.clientX / target.clientWidth ) * 2 - 1;
-            position.y = - ( event.clientY / target.clientHeight ) * 2 + 1;
+            return update;
 
         }
 
-        this.pollUpdate = function ( resetUpdate = true ) 
+        // By default, ___updateSinceLastPoll will be reverted to false after every call to this function
+        else
         {
-            let update = updateSinceLastPoll;
 
-            // Don't reset ___updateSinceLastPoll when caller explicitly requests this
-            if ( !resetUpdate )
-            {
+            updateSinceLastPoll = false;
 
-                return update;
+        }
 
-            }
+        return update;
+    };
 
-            // By default, ___updateSinceLastPoll will be reverted to false after every call to this function
-            else 
-            {
+    var getPosition = function () {
+        return position;
+    };
 
-                updateSinceLastPoll = false;
+    function onMouseMove( event )
+    {
 
-            }
+        updateSinceLastPoll = true;
 
-            return update;
-        };
-
-        this.getPosition = () => position;
-
-        target.addEventListener( 'mousemove', event => onMouseMove( event ), false );
+        position.x = ( event.clientX / target.clientWidth ) * 2 - 1;
+        position.y = - ( event.clientY / target.clientHeight ) * 2 + 1;
 
     }
 
+    target.addEventListener( 'mousemove', event => onMouseMove( event ), false );
+
+    return {
+        pollUpdate: pollUpdate,
+        getPosition: getPosition
+    };
+
 }
+

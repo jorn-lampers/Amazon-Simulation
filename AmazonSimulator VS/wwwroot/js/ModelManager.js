@@ -1,15 +1,16 @@
 import * as THREE from '../lib/three.module.js';
 import { GLTFLoader } from '../lib/GLTFLoader.js';
 
-var Models = function ( )
+var ModelManager = function ( gltfLoader )
 {
     let _animations = { };
     let _models = { };
-    let _envMap;
 
-    let gltfLoader;
+    let queued = [];
 
-    export function overrideMaterialProperties( modelNames, properties ) {
+    let _gltfLoader = gltfLoader;
+
+    function overrideMaterialProperties( modelNames, properties ) {
 
         modelNames.forEach( ( modelName, i, a ) => {
             let model = _models[modelName];
@@ -39,15 +40,46 @@ var Models = function ( )
         });
     }
 
-    export function loadModels( modelNames, gltfLoader ) {
+    function overrideModelProperties( modelNames, properties ) {
 
+        modelNames.forEach( ( modelName, i, a ) => {
+            let model = _models[modelName];
+
+            // Apply desired properties to objects imported from a GLB
+            model.traverse(function (child) {
+
+                let matches = [];
+
+                Object.keys( properties ).forEach( ( p) =>
+                {
+                    if( p in child )
+                        matches.push( p );
+                });
+
+                console.log('Setting ' + matches.length + ' properties in model with name "' + child.name + '".');
+                matches.forEach(( p ) => child[p] = properties[p]);
+
+            });
+
+        });
+    }
+
+    function loadModels( modelNames, callback ) {
 
         // Preload environment model before starting the simulation
-        ["environment", "truck", "robot", "shelf"].forEach((name, i, a) => {
-            gltfLoader
-                .load('/models/' + name + '/model.glb', function ( gltf )
+        modelNames.forEach((name, i, a) => {
+
+            let url = '/models/' + name + '/model.glb';
+
+            queued.push( url );
+
+            _gltfLoader
+                .load(url, function ( gltf )
                 {
+                    console.log('Preloaded model ' + name + '! (' + (a.length - i) + '/' + a.length + ')', 'green');
+
                     let model = gltf.scene;
+                    let animations = gltf.animations;
 
                     // Apply desired properties to objects imported from a GLB
                     model.traverse(function (child) {
@@ -60,15 +92,39 @@ var Models = function ( )
 
                     });
 
-                    models[name] = model;
+                    let index = queued.indexOf( url );
+                    if ( index !== -1 ) queued.splice( index );
 
-                    domConsole.print('Preloaded model ' + name + '! (' + i + '/' + a.length + ')', 'green');
+                    _models[name] = model;
+                    _animations[name] = animations;
+
+                    if( queued.length === 0 ) callback();
 
                 });
         });
 
     }
 
+    function getModelInstance( modelName ) {
+
+        return _models[modelName].clone();
+
+    }
+
+    function getAnimations( modelName ) {
+
+        return _animations[modelName];
+
+    }
+
+    return {
+        loadModels: loadModels,
+        getModelInstance: getModelInstance,
+        getAnimations: getAnimations,
+        overrideMaterialProperties: overrideMaterialProperties,
+        overrideModelProperties: overrideModelProperties
+    };
+
 };
 
-export { Models };
+export { ModelManager };

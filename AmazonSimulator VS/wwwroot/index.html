@@ -5,111 +5,42 @@
     <meta charset="UTF-8">
     <title>SimulationView</title>
 
-    <style>
-        #overlay {
-            width: 100vw;
-            height: 15vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background-color: black;
-            opacity: 0.8;
-            overflow-y: scroll;
+    <link type="text/css" rel="stylesheet" href="style.css">
 
-        }
-
-        #log {
-        }
-
-        p {
-            margin: 1px;
-            color: white;
-        }
-
-        input {
-            width: 99%;
-            background-color: black;
-            border: 1px solid white;
-            color: white;
-            top: 10px;
-            margin: 0 auto;
-        }
-
-        #viewport {
-            width: 100vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-            background-color: deepskyblue;
-        }
-
-        #controls {
-            width: 12vw;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 88%;
-            background-color: gray;
-        }
-
-        #compass {
-            width: 240px;
-            height: 240px;
-            position: absolute;
-            bottom: 4%;
-            left: 2.2%;
-            border: none;
-            opacity: 0.7;
-            background-color: #101010;
-        }
-    </style>
-</head>
-
-<body style="margin:0px;padding:0px;overflow:hidden;">
-    <!-- JQuery -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-
     <script src="lib/ResizeSensor.js"></script>
     <script src="lib/ElementQueries.js"></script>
 
-    <!-- Three libs -->
-    <script src="lib/three.js"></script>
-    <script src="lib/OrbitControls.js"></script>
-
-    <script src="lib/GLTFLoader.js"></script>
-
-    <script src="lib/GLTFExporter.js"></script>
-
-    <!-- Three GUI lib -->
-    <script src="lib/dat.gui.min.js"></script>
-
-    <!-- Utility functions -->
-    <script src="js/Utils.js"></script>
-
-    <!-- Arbitrary, UI-related event handlers -->
-    <script src="js/Interfacing.js"></script>
-
-    <!-- Model fetcher -->
-    <script src="js/Models.js"></script>
-
-    <!-- Model builder -->
-    <script src="js/ModelBuilder.js"></script>
-
     <!-- Client entrypoint -->
-    <script src="js/Main.js"></script>
+    <script type="module" src="js/Main.js"></script>
+</head>
 
-    <div id="viewport"></div>
+<body style="margin:0px;padding:0px;overflow:hidden;">
+
+    <section id="loading-screen">
+
+        <div id="loader"></div>
+
+        <h1 color="red">Loading......</h1>
+
+    </section>
+
+
+    <section id="viewport">
+
+    </section>
+
 
     <div id="overlay">
+
         <input id="input" />
-        <div id="log"></div>
+
+        <div id="log">
+
+        </div>
+
     </div>
 
-    <div id="controls"></div>
-
-    <!-- Console widget for sending of command and reading of logs -->
-    <script src="js/Console.js"></script>
 
     <iframe id="compass" src="compass.html"></iframe>
 

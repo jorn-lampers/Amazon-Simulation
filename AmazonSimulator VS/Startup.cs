@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
-using System.Threading.Tasks;
 using Views;
 
 namespace AmazonSimulator_VS
@@ -43,9 +42,11 @@ namespace AmazonSimulator_VS
             app.UseDefaultFiles();
 
             var provider = new FileExtensionContentTypeProvider();
+
             // Add new mappings
             provider.Mappings[".mtl"] = "text/plain";
-            provider.Mappings[".obj"] = "text/plain";
+            provider.Mappings[".glb"] = "model/gltf-binary";
+            provider.Mappings[".exr"] = "image/x-exr";
 
             app.UseStaticFiles(new StaticFileOptions
             {
