@@ -1,6 +1,7 @@
 ﻿import * as THREE from '../lib/three.module.js';
 
-import DOMConsole from './DOMConsole.js';
+import Stats from '../lib/stats.module.js';
+import * as dat from '../lib/dat.gui.module.js';
 
 import { GLTFLoader } from '../lib/GLTFLoader.js';
 import { ModelManager } from './ModelManager.js';
@@ -8,10 +9,8 @@ import { EXRLoader } from '../lib/EXRLoader.js';
 
 import { OrbitControls } from '../lib/OrbitControls.js';
 
-import Stats from '../lib/stats.module.js';
-import * as dat from '../lib/dat.gui.module.js';
-
 import * as Utils from './Utils.js';
+import DOMConsole from './DOMConsole.js';
 
 let viewport;
 let compassWidget;
@@ -23,14 +22,18 @@ let stats;
 let camera, scene, renderer;
 let worldObjects = {};
 
+let pathfindingGraph;
+
 // Lighting
 let exrCubeRenderTarget;
 let exrBackground;
 let ambientLight, directionalLight;
 
 // Animations
-let animations;
 let mixer;
+
+// Action-clip responsible for the opening/closing of warehouse-doors (A mesh encapsulated by Object3D 'environment')
+let warehouseDoorActions = [];
 
 // User-interfacing
 let cameraControls;
@@ -39,40 +42,45 @@ let gui;
 // Clock used to tick animations
 let clock;
 
-// Action-clip responsible for the opening/closing of warehouse-doors (A mesh encapsulated by Object3D 'environment')
-let warehouseDoorActions = [];
-
 let loadingManager;
 let gltfLoader;
 let exrLoader;
 
 let modelManager;
 
-let debugColliders = true;
+let eventRunning = false;
+let eventTimer;
+
 let footprints = {};
 
-let settings = {
-  amount: 10
-}
-
 let controls = {
-  receiveShipment: () => sendCommand( "ReceiveShipmentCommand", { amount: settings.amount } ),
-  sendShipment: () => sendCommand( "SendShipmentCommand", { amount: settings.amount } )
-}
+  shipmentSize: 10,
 
-init();
+  autoRun: false,
+
+  autoRunMinInterval: 2,
+  autoRunMaxInterval: 10,
+
+  autoRunMinCargo: 1,
+  autoRunMaxCargo: 24
+};
+
+let settings = {
+  shadowMapRes: 2048,
+  displayPathfindingGraph: false,
+  displayRobotFOV: false
+};
 
 function init( )
 {
 
-  domConsole = new DOMConsole( getSocket );
+  domConsole = DOMConsole();
   viewport = document.getElementById( 'viewport' );
 
   initScene();
 
   clock = new THREE.Clock( true );
   mixer = new THREE.AnimationMixer( scene );
-
 
   // Instantiate renderer
   renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -138,9 +146,26 @@ function init( )
     renderer.setSize( viewport.clientWidth, viewport.clientHeight );
   });
 
-  initControls();
+  initGUI();
 
-  /////
+  // Orbitcontrols sourced from https://github.com/mrdoob/three.js
+  // Modified to prevent camera from panning/zooming through the ground
+  cameraControls = new OrbitControls( camera, viewport );
+
+  cameraControls.minPan = new THREE.Vector3( -50, 0.75, -50 );
+  cameraControls.maxPan = new THREE.Vector3( 50, 50, 50 );
+  cameraControls.screenSpacePanning = true;
+  cameraControls.panSpeed = 0.5;
+
+  cameraControls.maxDistance = 60;
+
+  cameraControls.enableDamping = true;
+  cameraControls.dampingFactor = 0.1;
+
+  cameraControls.rotateSpeed = 0.35;
+
+  cameraControls.target.set( 0, 2, 0 );
+
 
   // Register eventhandlers for user input
   window.addEventListener( 'keydown', onKeyDown, false );
@@ -150,6 +175,24 @@ function init( )
 
   domConsole.print( "Scene initialized! (" + getMs() + " ms)", 'green' );
 
+}
+
+// Sends specified command to the back-end
+export function sendCommand( type, args )
+{
+  let msg = JSON.stringify(
+      {
+        type: type,
+        parameters: args
+      }
+  );
+
+  socket.send(msg);
+}
+
+// Gets elapsed time in ms
+export function getMs() {
+  return clock.getElapsedTime() * 1000;
 }
 
 // Sets up lighting and other properties in the scene that don't require loading
@@ -189,39 +232,114 @@ function initScene( )
   scene.add( ambientLight );
 }
 
-function initControls() {
-  // Orbitcontrols sourced from https://github.com/mrdoob/three.js
-  // Modified to prevent camera from panning/zooming through the ground
-  cameraControls = new OrbitControls( camera, viewport );
+function runRandomEvent()
+{
 
-  cameraControls.minPan = new THREE.Vector3( -50, 0.75, -50 );
-  cameraControls.maxPan = new THREE.Vector3( 50, 50, 50 );
-  cameraControls.screenSpacePanning = true;
-  cameraControls.panSpeed = 0.5;
+  if(eventTimer)
+  {
+    domConsole.print('An event has already been scheduled to run');
 
-  cameraControls.maxDistance = 60;
+    return;
+  }
 
-  cameraControls.enableDamping = true;
-  cameraControls.dampingFactor = 0.1;
+  if(eventRunning)
+  {
+    domConsole.print('An event is already running, a new one will be scheduled as soon as it has finished...');
+    return;
+  }
 
-  cameraControls.rotateSpeed = 0.35;
+  let dt = 1000 * Math.random() * controls.autoRunMaxInterval - controls.autoRunMinInterval;
+  let t = 1000 * controls.autoRunMinInterval + dt;
+  if(t < 0) t = 1;
 
-  cameraControls.target.set( 0, 2, 0 );
+  let a = Math.floor(Math.random() * (controls.autoRunMaxCargo - controls.autoRunMinCargo) + controls.autoRunMinCargo);
+  if(a < 0) a = 0;
+
+  let isReceive = Math.random() > 0.5;
+
+  let cType = isReceive ? "ReceiveShipmentCommand" : "SendShipmentCommand";
+
+  domConsole.print("Next event: '" + (isReceive ? 'receive' : 'send') + "' " + a + " starts in " + t + "ms!");
+
+  eventTimer = setTimeout(function() {
+    domConsole.print((isReceive ? 'Receiving ' : 'Sending ') + ' shipment of size: ' + a);
+    sendCommand( cType, { amount: a }, t);
+    eventTimer = null;
+  }, t);
+
+}
+
+function initGUI()
+{
 
   gui = new dat.gui.GUI();
 
   let uiSettings = gui.addFolder('Settings');
+
+  uiSettings.add(settings, 'displayPathfindingGraph').onChange(function (enabled) {
+    pathfindingGraph.visible = enabled;
+  });
+
+  uiSettings.add(settings, 'displayRobotFOV');
+
+  let uiAutorun = gui.addFolder('Autorun');
+
+  uiAutorun.add(controls, 'autoRunMinInterval', 0, 60);
+  uiAutorun.add(controls, 'autoRunMaxInterval', 1, 120);
+
+  uiAutorun.add(controls, 'autoRunMinCargo', 1, 24);
+  uiAutorun.add(controls, 'autoRunMaxCargo', 1, 24);
+
+  uiAutorun.add(controls, 'autoRun').onChange(function (enabled)
+  {
+
+    if (enabled) {
+
+      domConsole.print("Random events are now enabled.");
+
+      if(eventRunning) return;
+
+      runRandomEvent();
+
+    }
+    else
+    {
+
+      domConsole.print("Random events have been disabled.");
+
+      if(eventTimer)
+      {
+
+        clearTimeout(eventTimer);
+
+        eventTimer = null;
+
+      }
+
+    }
+
+  });
+
+  let actions = {
+    receiveShipment: function () {
+      let a = controls.shipmentSize;
+      sendCommand( "ReceiveShipmentCommand", { amount: a } );
+    },
+    sendShipment: function() {
+      let a = controls.shipmentSize;
+      sendCommand( "SendShipmentCommand", { amount: a } );
+    }
+  }
+
   let uiControls = gui.addFolder('Controls');
 
-  uiControls.add(settings, 'amount', 0, 32);
-  uiControls.add(controls, 'sendShipment');
-  uiControls.add(controls, 'receiveShipment');
+  uiControls.add(controls, 'shipmentSize', 0, 32);
 
-  //gui.add( directionalLight, 'intensity' );
-  //gui.add( directionalLight.shadow, 'bias' );
-  //gui.add( directionalLight.shadow, 'radius' );
-  //gui.add( directionalLight.position, 'y' );
-  //gui.add( ambientLight, 'intensity' );
+  uiControls.add(actions, 'receiveShipment');
+  uiControls.add(actions, 'sendShipment');
+
+  uiControls.open();
+
 }
 
 function initEnvironment( )
@@ -248,24 +366,6 @@ function initEnvironment( )
 
     warehouseDoorActions[i] = action;
   }
-
-}
-
-export function toggleDoor( id ){
-
-  let action = warehouseDoorActions[id];
-
-  domConsole.print('Running animation # ' + id + ' ' + getMs() );
-
-  action.loop = THREE.LoopOnce;
-  action.clampWhenFinished = true;
-
-  action.timeScale = action.timeScale * -1;
-  action.paused = false;
-  action.enabled = true;
-
-  // Only schedule action if it isn't already running
-  if( !action.isRunning() ) action.play();
 
 }
 
@@ -301,23 +401,29 @@ function create( parameters )
 {
 
   let type = parameters.Type;
-  let id = parameters.Guid;
 
+  // Play door opening animation
   if( type === 'truck') {
+    eventRunning = true;
     setDoor(3, true );
   }
 
-  domConsole.print( 'Creating new model of type ' + type + ' with guid ' + id );
-
   let obj;
 
-  if ( type == "storage" ) obj = Utils.createStorage( 2, 5 );
-  else if ( type == "graphdisplay" ) obj = Utils.createGraphWrapper( parameters )
-  else obj = modelManager.getModelInstance( type );
+  // Objects of type 'storage' and 'graph' are 'procedurally' generated
+  if ( type === "storage" ) obj = Utils.createStorage( 2, 5 );
+  else if ( type === "graphdisplay" )
+  {
+    obj = Utils.createGraphWrapper( parameters );
+    pathfindingGraph = obj;
+  }
+  else obj = modelManager.getModelInstance( type ); // Fetch preloaded model from ModelManager
 
+  // Wrapper function that adds some extra functions to obj
   Utils.wrapModel( obj, type, parameters );
 
   worldObjects[parameters.Guid] = obj;
+
   scene.add( obj );
 
 }
@@ -347,15 +453,20 @@ function initSocket( )
         object.updatePosition( params.X, params.Y, params.Z );
         object.updateRotation( params.RotationX, params.RotationY, params.RotationZ );
 
-        if(object.name === "robot" && debugColliders) {
+        if(object.name === "robot") {
 
-          if(footprints[params.Guid]) {
+          if(footprints[params.Guid])
+          {
             scene.remove( footprints[params.Guid] );
           }
 
-          footprints[params.Guid] = Utils.createSegmentWrapper(object, params.Trail);
+          if(settings.displayRobotFOV)
+          {
+            footprints[params.Guid] = Utils.createSegmentWrapper(object, params.Trail);
+            scene.add(footprints[params.Guid]);
+          }
 
-          scene.add(footprints[params.Guid]);
+
 
         }
 
@@ -366,17 +477,17 @@ function initSocket( )
 
         if( worldObjects[json.parameters].name === 'truck') {
           setDoor(3, false );
-          runRandomEvent(5000, 60000, 0, 12 );
+
+          eventRunning = false;
+
+          if(controls.autoRun) runRandomEvent();
         }
 
         scene.remove( worldObjects[json.parameters] );
+
         delete worldObjects[json.parameters];
 
-      } else {
-
-        domConsole.onerror( "Received command of unknown type: " + cmdName );
-
-      }
+      } else domConsole.onerror( "Received command of unknown type: " + cmdName );
 
   }
 
@@ -385,32 +496,22 @@ function initSocket( )
   socket.onopen = () =>
   {
 
-    domConsole.print( 'Connection with back-end established!' );
+    domConsole.print( 'Connection with back-end established!', 'green' );
 
     const loadingScreen = document.getElementById( 'loading-screen' );
+
+    // At this point the scene will be done loading, fade the loading-screen overlay
     loadingScreen.classList.add( 'fade-out' );
 
-    // optional: remove loader from DOM via event listener
+    // Remove loading screen after it faded out so it doesn't interfere with mouse controls
     loadingScreen.addEventListener( 'transitionend', ( event ) => event.target.remove() );
 
-
     domConsole.print( "Starting animation loop! (" + getMs() + " ms)", 'green' );
-    render( );
+
+    // Start render loop
+    render();
 
   }
-
-}
-
-function runRandomEvent( minWait, maxWait, minAmount, maxAmount )
-{
-
-  let t = Math.random() * (maxWait - minWait) + minWait;
-  let a = Math.floor(Math.random() * (maxAmount - minAmount) + minAmount);
-  let isReceive = Math.random() > 0.5;
-
-  domConsole.print("Next event: '" + (isReceive ? 'receive' : 'send') + "' " + a + " starts in " + t + "ms!");
-
-  setTimeout(() => sendCommand( "ReceiveShipmentCommand", { amount: a }, t));
 
 }
 
@@ -431,18 +532,8 @@ function render()
   stats.end();
 
   requestAnimationFrame( render );
+
 }
 
-export function sendCommand( type, args )
-{
-  let msg = JSON.stringify(
-      {
-        type: type,
-        parameters: args
-      }
-  );
-
-  socket.send(msg);
-}
-export function getMs() { return clock.getElapsedTime() * 1000; }
-export function getSocket() { return socket; }
+// Starts setup
+init();

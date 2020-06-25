@@ -1,7 +1,6 @@
-﻿import * as Utils from './Utils.js';
-import * as Main from '../js/Main.js';
+﻿import * as Main from '../js/Main.js';
 
-var DOMConsole = function( socketHandle )
+var DOMConsole = function( )
 {
     var messageID = 0;
 
@@ -58,18 +57,6 @@ var DOMConsole = function( socketHandle )
 
         print( 'Sending a shipment with max size of ' + amount );
         Main.sendCommand( "SendShipmentCommand", { amount: amount } );
-
-    }
-
-    function commandAnimate( args )
-    {
-
-        let index = 0;
-
-        if ( args.length > 0 ) index = parseInt( args[0] );
-
-        print('Running animation # ' + index );
-        Main.toggleDoor( index );
 
     }
 

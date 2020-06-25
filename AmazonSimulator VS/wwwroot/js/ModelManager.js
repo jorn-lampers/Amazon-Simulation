@@ -1,5 +1,4 @@
-import * as THREE from '../lib/three.module.js';
-import { GLTFLoader } from '../lib/GLTFLoader.js';
+import DOMConsole from './DOMConsole.js';
 
 var ModelManager = function ( gltfLoader )
 {
@@ -30,7 +29,6 @@ var ModelManager = function ( gltfLoader )
                             matches.push( p );
                     });
 
-                    console.log('Setting ' + matches.length + ' properties in material with name "' + mat.name + '".');
                     matches.forEach(( p ) => mat[p] = properties[p]);
 
                 }
