@@ -10,7 +10,6 @@ var intersects = {};
 var selected = [];
 
 var gui;
-var models = {};
 
 window.onload = init;
 
