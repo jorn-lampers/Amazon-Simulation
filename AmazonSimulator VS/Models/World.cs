@@ -48,8 +48,8 @@ namespace Models
                 new List<Vector3>() {
                     Constants.RobotEnterTruck,
                     Constants.RobotExitTruck
-                }, 
-            0);
+                },
+            Constants.LaneWidth);
 
             _worldObjects.Add(new GraphDisplay(this, _robotPathfindingGraph));
 
@@ -126,10 +126,20 @@ namespace Models
             return s;
         }
 
-        public List<CollidablePathfindingEntity> GetCollisions(CollidablePathfindingEntity entity) // TODO: This shouldn't be done here....
+        public List<CollidablePathfindingEntity> GetCollisions(CollidablePathfindingEntity entity) 
             => ObjectsOfType<CollidablePathfindingEntity>().Where(ce => 
                 entity.Guid != ce.Guid 
                 && entity.CheckCollision(ce.Intersectable)
+            ).ToList();
+
+        public List<CollidablePathfindingEntity> GetCollisions(LineSegment2 path)
+            => ObjectsOfType<CollidablePathfindingEntity>().Where(ce =>
+               ce.Intersectable.Intersects(path)
+            ).ToList();
+
+        public List<CollidablePathfindingEntity> GetCollisions(ICollection<LineSegment2> path)
+            => ObjectsOfType<CollidablePathfindingEntity>().Where(ce =>
+               ce.Intersectable.Intersects(path)
             ).ToList();
 
         public IDisposable Subscribe(IObserver<UICommand> observer)

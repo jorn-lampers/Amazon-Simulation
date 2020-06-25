@@ -35,18 +35,6 @@ var DOMConsole = function( socketHandle )
 
     }
 
-    function sendCommand( type, args )
-    {
-        let msg = JSON.stringify(
-            {
-                type: type,
-                parameters: args
-            }
-        );
-
-        socketHandle().send(msg);
-    }
-
     function commandReceiveShipment( args )
     {
 
@@ -56,7 +44,7 @@ var DOMConsole = function( socketHandle )
             amount = parseInt( args[0] );
 
         print( 'Receiving a shipment with size of ' + amount );
-        sendCommand( "ReceiveShipmentCommand", { amount: amount } );
+        Main.sendCommand( "ReceiveShipmentCommand", { amount: amount } );
 
     }
 
@@ -69,7 +57,7 @@ var DOMConsole = function( socketHandle )
             amount = parseInt( args[0] );
 
         print( 'Sending a shipment with max size of ' + amount );
-        sendCommand( "SendShipmentCommand", { amount: amount } );
+        Main.sendCommand( "SendShipmentCommand", { amount: amount } );
 
     }
 

@@ -23,7 +23,7 @@ namespace Controllers
             {
                 if (r.IsAtDestination())
                 {
-                    r.AssignTask(new PathfinderTask(r, target, r.PathfindingGraph));
+                    r.AssignTask(new PathfinderTask(r, target, r.GetPathfindingGraph()));
                 }
             }
         }

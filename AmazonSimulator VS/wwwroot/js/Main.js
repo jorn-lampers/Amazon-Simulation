@@ -13,7 +13,6 @@ import * as dat from '../lib/dat.gui.module.js';
 
 import * as Utils from './Utils.js';
 
-
 let viewport;
 let compassWidget;
 let domConsole;
@@ -48,6 +47,18 @@ let gltfLoader;
 let exrLoader;
 
 let modelManager;
+
+let debugColliders = true;
+let footprints = {};
+
+let settings = {
+  amount: 10
+}
+
+let controls = {
+  receiveShipment: () => sendCommand( "ReceiveShipmentCommand", { amount: settings.amount } ),
+  sendShipment: () => sendCommand( "SendShipmentCommand", { amount: settings.amount } )
+}
 
 init();
 
@@ -118,24 +129,6 @@ function init( )
 
   compassWidget = document.getElementById('compass').contentWindow;
 
-  // Orbitcontrols sourced from https://github.com/mrdoob/three.js
-  // Modified to prevent camera from panning/zooming through the ground
-  cameraControls = new OrbitControls( camera, viewport );
-
-  cameraControls.minPan = new THREE.Vector3( -50, 0.75, -50 );
-  cameraControls.maxPan = new THREE.Vector3( 50, 50, 50 );
-  cameraControls.screenSpacePanning = true;
-  cameraControls.panSpeed = 0.5;
-
-  cameraControls.maxDistance = 60;
-
-  cameraControls.enableDamping = true;
-  cameraControls.dampingFactor = 0.1;
-
-  cameraControls.rotateSpeed = 0.35;
-
-  cameraControls.target.set( 0, 2, 0 );
-
   // Default window scaling & camera frustum adjusting
   new ResizeSensor(viewport, function ()
   {
@@ -145,6 +138,8 @@ function init( )
     renderer.setSize( viewport.clientWidth, viewport.clientHeight );
   });
 
+  initControls();
+
   /////
 
   // Register eventhandlers for user input
@@ -152,16 +147,6 @@ function init( )
 
   stats = new Stats();
   viewport.appendChild( stats.dom );
-
-  /////
-
-  gui = new dat.gui.GUI();
-
-  gui.add( directionalLight, 'intensity' );
-  gui.add( directionalLight.shadow, 'bias' );
-  gui.add( directionalLight.shadow, 'radius' );
-  gui.add( directionalLight.position, 'y' );
-  gui.add( ambientLight, 'intensity' );
 
   domConsole.print( "Scene initialized! (" + getMs() + " ms)", 'green' );
 
@@ -204,13 +189,48 @@ function initScene( )
   scene.add( ambientLight );
 }
 
+function initControls() {
+  // Orbitcontrols sourced from https://github.com/mrdoob/three.js
+  // Modified to prevent camera from panning/zooming through the ground
+  cameraControls = new OrbitControls( camera, viewport );
+
+  cameraControls.minPan = new THREE.Vector3( -50, 0.75, -50 );
+  cameraControls.maxPan = new THREE.Vector3( 50, 50, 50 );
+  cameraControls.screenSpacePanning = true;
+  cameraControls.panSpeed = 0.5;
+
+  cameraControls.maxDistance = 60;
+
+  cameraControls.enableDamping = true;
+  cameraControls.dampingFactor = 0.1;
+
+  cameraControls.rotateSpeed = 0.35;
+
+  cameraControls.target.set( 0, 2, 0 );
+
+  gui = new dat.gui.GUI();
+
+  let uiSettings = gui.addFolder('Settings');
+  let uiControls = gui.addFolder('Controls');
+
+  uiControls.add(settings, 'amount', 0, 32);
+  uiControls.add(controls, 'sendShipment');
+  uiControls.add(controls, 'receiveShipment');
+
+  //gui.add( directionalLight, 'intensity' );
+  //gui.add( directionalLight.shadow, 'bias' );
+  //gui.add( directionalLight.shadow, 'radius' );
+  //gui.add( directionalLight.position, 'y' );
+  //gui.add( ambientLight, 'intensity' );
+}
+
 function initEnvironment( )
 {
 
   let environment = modelManager.getModelInstance('environment');
 
   environment.translateZ(8.5);
-  environment.translateX(3.2);
+  environment.translateX(1.2);
 
   environment.rotateY(0.5 * Math.PI);
 
@@ -295,7 +315,7 @@ function create( parameters )
   else if ( type == "graphdisplay" ) obj = Utils.createGraphWrapper( parameters )
   else obj = modelManager.getModelInstance( type );
 
-  Utils.wrapModel( obj, type );
+  Utils.wrapModel( obj, type, parameters );
 
   worldObjects[parameters.Guid] = obj;
   scene.add( obj );
@@ -327,6 +347,18 @@ function initSocket( )
         object.updatePosition( params.X, params.Y, params.Z );
         object.updateRotation( params.RotationX, params.RotationY, params.RotationZ );
 
+        if(object.name === "robot" && debugColliders) {
+
+          if(footprints[params.Guid]) {
+            scene.remove( footprints[params.Guid] );
+          }
+
+          footprints[params.Guid] = Utils.createSegmentWrapper(object, params.Trail);
+
+          scene.add(footprints[params.Guid]);
+
+        }
+
       }
       else if ( cmdName === "DiscardModel3DCommand" ) {
 
@@ -334,6 +366,7 @@ function initSocket( )
 
         if( worldObjects[json.parameters].name === 'truck') {
           setDoor(3, false );
+          runRandomEvent(5000, 60000, 0, 12 );
         }
 
         scene.remove( worldObjects[json.parameters] );
@@ -368,6 +401,19 @@ function initSocket( )
 
 }
 
+function runRandomEvent( minWait, maxWait, minAmount, maxAmount )
+{
+
+  let t = Math.random() * (maxWait - minWait) + minWait;
+  let a = Math.floor(Math.random() * (maxAmount - minAmount) + minAmount);
+  let isReceive = Math.random() > 0.5;
+
+  domConsole.print("Next event: '" + (isReceive ? 'receive' : 'send') + "' " + a + " starts in " + t + "ms!");
+
+  setTimeout(() => sendCommand( "ReceiveShipmentCommand", { amount: a }, t));
+
+}
+
 // Animation loop
 function render()
 {
@@ -387,5 +433,16 @@ function render()
   requestAnimationFrame( render );
 }
 
+export function sendCommand( type, args )
+{
+  let msg = JSON.stringify(
+      {
+        type: type,
+        parameters: args
+      }
+  );
+
+  socket.send(msg);
+}
 export function getMs() { return clock.getElapsedTime() * 1000; }
 export function getSocket() { return socket; }

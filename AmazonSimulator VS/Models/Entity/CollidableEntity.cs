@@ -7,7 +7,7 @@ namespace Models
         : PathfindingEntity
         , ICollidable<PolygonalFootprint>
     {
-        private PolygonalFootprint _footprint;
+        protected PolygonalFootprint _footprint;
 
         public CollidablePathfindingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond, float rotationPerSecond, float accelerationPerSecond)
             : base(type, parent, x, y, z, rotationX, rotationY, rotationZ, movementPerSecond, rotationPerSecond, accelerationPerSecond)
@@ -37,7 +37,9 @@ namespace Models
             base.Move(x, y, z);
 
             if (_environment.GetCollisions(this).Count > 0)
-            {
+            { 
+                // If the entity were to intersect with some other entity ...
+                // undo the movement and set entity speed to 0
                 Move(oldPos);
                 this._velocity = 0f;
             }

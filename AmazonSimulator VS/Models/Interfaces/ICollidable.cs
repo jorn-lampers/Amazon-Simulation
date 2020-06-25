@@ -45,6 +45,11 @@ namespace Models
             this.Q = p2;
         }
 
+        public LineSegment2 at(Vector2 trans)
+        {
+            return new LineSegment2(P + trans, Q + trans);
+        }
+
         // derived from source: https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
         public bool Contains(Vector2 P)
         {

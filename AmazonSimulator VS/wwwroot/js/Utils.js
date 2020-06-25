@@ -2,8 +2,9 @@
 
 var TS = performance.now();
 
-export function wrapModel ( model, name = "NO_NAME" )
+export function wrapModel ( model, name = "NO_NAME", params = {} )
 {
+
     model.name = name;
     let box = new THREE.Box3().setFromObject( model );
 
@@ -149,6 +150,32 @@ export function makeDraggable( elmnt )
         document.onmousemove = null;
     }
 
+}
+
+export function createSegmentWrapper( robot, segments )
+{
+    let group = new THREE.Group();
+
+    segments.forEach(function (segment)
+    {
+        let lineGeometry = new THREE.Geometry();
+
+        lineGeometry.vertices.push(new THREE.Vector3(segment.P.X, 0.1, segment.P.Y));
+        lineGeometry.vertices.push(new THREE.Vector3(segment.Q.X, 0.1, segment.Q.Y));
+
+        let mat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+
+        let mesh = new THREE.Line(
+            lineGeometry,
+            mat
+        );
+
+        group.add(mesh);
+    });
+
+    group.name = "footprint";
+
+    return group;
 }
 
 export function createGraphWrapper(graph)

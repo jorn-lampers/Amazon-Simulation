@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using AmazonSimulator_VS;
 using Models;
 using Views;
 
@@ -83,13 +84,13 @@ namespace Controllers {
                 // Inform metrics the tick has ended
                 _metrics.EndTick();
 
-                /* 
-                if(_metrics.TickNo % 1000 == 0)
+                
+                if(_metrics.TickNo % (Constants.SIM_TPS * 10) == 0)
                 {
                     Console.WriteLine("Finished iteration in {0} Ms, next tick should be after {1} Ms.", _metrics.LastTickDuration.TotalMilliseconds, _metrics.TimeUntilNextTick.TotalMilliseconds);
                     Console.WriteLine("Average workload during the previous 100 ticks was {0}%.", _metrics.AverageWorkload100Ticks * 100);
                 }
-                */
+                
 
                 TimeSpan timeOut = _metrics.TimeUntilNextTick;
 

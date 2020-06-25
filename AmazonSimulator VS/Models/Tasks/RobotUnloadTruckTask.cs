@@ -57,7 +57,7 @@ namespace Models
             switch (State)
             {
                 case RobotUnloadTruckTask.TaskState.Init:
-                    _targetEntity.SetPathfindingTarget(Constants.RobotEnterTruck, _targetEntity.PathfindingGraph);
+                    _targetEntity.SetPathfindingTarget(Constants.RobotEnterTruck, _targetEntity.GetPathfindingGraph());
                     _state = TaskState.MoveToQueue;
                     break;
 
@@ -84,7 +84,7 @@ namespace Models
                 case RobotUnloadTruckTask.TaskState.LeaveTruck:
                     if (!_targetEntity.IsAtDestination()) break;
 
-                    _targetEntity.SetPathfindingTarget(_destination.PositionAbsolute, _targetEntity.PathfindingGraph);
+                    _targetEntity.SetPathfindingTarget(_destination.PositionAbsolute, _targetEntity.GetPathfindingGraph());
                     _lock.Release();
                     _state = TaskState.MoveToDestination;
                     break;
@@ -97,7 +97,7 @@ namespace Models
                     _destination.SetCargo(_targetEntity.ReleaseCargo());
                     _state = TaskState.Finished;
                     this._isFinished = true;
-                    _targetEntity.SetPathfindingTarget(_targetEntity.IdlePos, _targetEntity.PathfindingGraph);
+                    _targetEntity.SetPathfindingTarget(_targetEntity.IdlePos, _targetEntity.GetPathfindingGraph());
                     break;
                 case RobotUnloadTruckTask.TaskState.Finished:
                     break;

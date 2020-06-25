@@ -14,13 +14,14 @@ namespace Models
         private Queue<SimulationTask<Robot>> _tasks;
         private Graph _graph;
         private Vector3 _idlePos;
+        private List<LineSegment2> _trail;
 
         public bool IsStandBy 
             => _tasks.Count == 0;
-        public Graph PathfindingGraph 
-            => _graph;
+        public Graph GetPathfindingGraph() => _graph;
         public Vector3 IdlePos => _idlePos;
 
+        public List<LineSegment2> Trail => _trail;
 
         public bool HasFreeCargoSlots 
             => _cargo.IsAvailable;
@@ -41,6 +42,7 @@ namespace Models
             _graph = pathfindingGraph;
             _tasks = new Queue<SimulationTask<Robot>>();
             _idlePos = Position;
+            _trail = this._footprint.AsLineSegments();
         }
 
         public Shelf ReleaseCargo()
@@ -65,7 +67,23 @@ namespace Models
                 if (_tasks.First().Tick())
                     _tasks.Dequeue();
 
+            var pos2 = new Vector2(this.Position.X, this.Position.Z);
+            var tPos2 = new Vector2(this._target.X, this._target.Z) - pos2;
+
+            var d = this.GetRequiredDistanceToFullStop() + 0.25f;
+            var tDelta2 = new Vector2(0, 0);
+            if(tPos2.Length() > 0) 
+                tDelta2 = Vector2.Normalize(tPos2) * d;
+
+            _trail = this.Intersectable.AsCoveredAreaRect<List<LineSegment2>>(tDelta2);
+
+            var hits = _environment.GetCollisions(_trail).Where(h => h.Guid != this.Guid);
+
+            if (hits.Any()) this._brake = true;
+            else this._brake = false;
+
             base.Tick(tick);
+
             _cargo.Tick(tick);
 
             return _needsUpdate;
