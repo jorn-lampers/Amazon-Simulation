@@ -83,7 +83,7 @@ var ModelManager = function ( gltfLoader )
                     model.traverse(function (child) {
 
                         // All models should cast shadows except materials named 'Material.Glass'
-                        child.castShadow = (child.material && child.material.name != 'Material.Glass');
+                        child.castShadow = (child.material && child.material.name !== 'Material.Glass');
 
                         // All models should receive shadows.
                         child.receiveShadow = true;

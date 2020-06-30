@@ -1,6 +1,6 @@
 ﻿import * as THREE from '../lib/three.module.js';
 
-export function wrapModel ( model, name = "NO_NAME", params = {} )
+export function wrapModel ( model, name = "NO_NAME")
 {
 
     model.name = name;
@@ -15,6 +15,38 @@ export function wrapModel ( model, name = "NO_NAME", params = {} )
         model.rotation.x = rx;
         model.rotation.y = ry;
         model.rotation.z = rz;
+    }
+
+    model.updateDebugUI = function ( params, scene )
+    {
+
+    }
+
+    if(name === "robot")
+    {
+
+        model.updateDebugUI = function ( params, scene )
+        {
+
+            if(model.footprint)
+            {
+                scene.remove( model.footprint );
+                delete model.footprint;
+            }
+
+            if(model.target)
+            {
+                scene.remove( model.target );
+                delete model.target;
+            }
+
+            model.footprint = createSegmentWrapper( model, params.Trail );
+            scene.add( model.footprint );
+
+            model.target = createTargetWrapper( model, params.Target );
+            scene.add( model.target );
+        }
+
     }
 
 }
@@ -42,6 +74,21 @@ export function createSegmentWrapper( robot, segments )
     });
 
     group.name = "footprint";
+
+    return group;
+}
+
+export function createTargetWrapper( model, targetPos )
+{
+    let group = new THREE.Group();
+
+    let delta = new THREE.Vector3(targetPos.X - model.position.x, 0, targetPos.Z - model.position.z);
+
+    let dist = delta.length();
+    let dir = delta.normalize();
+
+    group.add( new THREE.ArrowHelper( dir, model.position, dist, 0xff0000, dist * 0.1, 0.2 ) );
+    group.name = "target";
 
     return group;
 }

@@ -20,6 +20,7 @@ namespace Models
         public float MovementSpeed => _maxMovementSpeed; // In units per second.
         public float RotationSpeed => _rotationSpeed;
         public float Velocity => _velocity;
+        public Vector3 Target => _target;
 
         public DisplacingEntity(string type, EntityEnvironmentInfoProvider parent, float x, float y, float z, float rotationX, float rotationY, float rotationZ, float movementPerSecond, float rotationPerSecond)
             : base(type, parent, x, y, z, rotationX, rotationY, rotationZ)

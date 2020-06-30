@@ -51,8 +51,6 @@ let modelManager;
 let eventRunning = false;
 let eventTimer;
 
-let footprints = {};
-
 let controls = {
   shipmentSize: 10,
 
@@ -237,15 +235,20 @@ function runRandomEvent()
 
   if(eventTimer)
   {
+
     domConsole.print('An event has already been scheduled to run');
 
     return;
+
   }
 
   if(eventRunning)
   {
+
     domConsole.print('An event is already running, a new one will be scheduled as soon as it has finished...');
+
     return;
+
   }
 
   let dt = 1000 * Math.random() * controls.autoRunMaxInterval - controls.autoRunMinInterval;
@@ -321,14 +324,23 @@ function initGUI()
   });
 
   let actions = {
-    receiveShipment: function () {
+
+    receiveShipment: function ()
+    {
+
       let a = controls.shipmentSize;
       sendCommand( "ReceiveShipmentCommand", { amount: a } );
+
     },
-    sendShipment: function() {
+
+    sendShipment: function()
+    {
+
       let a = controls.shipmentSize;
       sendCommand( "SendShipmentCommand", { amount: a } );
+
     }
+
   }
 
   let uiControls = gui.addFolder('Controls');
@@ -391,10 +403,15 @@ function onKeyDown( e )
 {
   if ( e.keyCode == 192 || e.which == 192 )
   {
+
     e.preventDefault();
+
     $('#overlay').toggle( 250 );
+
     $( '#input' ).focus();
+
   }
+
 }
 
 function create( parameters )
@@ -404,8 +421,11 @@ function create( parameters )
 
   // Play door opening animation
   if( type === 'truck') {
+
     eventRunning = true;
+
     setDoor(3, true );
+
   }
 
   let obj;
@@ -414,13 +434,16 @@ function create( parameters )
   if ( type === "storage" ) obj = Utils.createStorage( 2, 5 );
   else if ( type === "graphdisplay" )
   {
+
     obj = Utils.createGraphWrapper( parameters );
+
     pathfindingGraph = obj;
+
   }
   else obj = modelManager.getModelInstance( type ); // Fetch preloaded model from ModelManager
 
   // Wrapper function that adds some extra functions to obj
-  Utils.wrapModel( obj, type, parameters );
+  Utils.wrapModel( obj, type );
 
   worldObjects[parameters.Guid] = obj;
 
@@ -453,20 +476,11 @@ function initSocket( )
         object.updatePosition( params.X, params.Y, params.Z );
         object.updateRotation( params.RotationX, params.RotationY, params.RotationZ );
 
-        if(object.name === "robot") {
-
-          if(footprints[params.Guid])
-          {
-            scene.remove( footprints[params.Guid] );
-          }
+        if(object.name === "robot")
+        {
 
           if(settings.displayRobotFOV)
-          {
-            footprints[params.Guid] = Utils.createSegmentWrapper(object, params.Trail);
-            scene.add(footprints[params.Guid]);
-          }
-
-
+            object.updateDebugUI( params, scene );
 
         }
 
