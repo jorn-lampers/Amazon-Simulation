@@ -72,17 +72,10 @@ namespace Models
 
             var d = this.GetRequiredDistanceToFullStop() + 0.25f;
             var tDelta2 = new Vector2(0, 0);
-            if(tPos2.Length() > 0) 
-                tDelta2 = Vector2.Normalize(tPos2) * d;
+            if(tPos2.Length() > 0) tDelta2 = Vector2.Normalize(tPos2) * d;
 
             _trail = this.Intersectable.AsCoveredAreaRect<List<LineSegment2>>(tDelta2);
-
-            var hits = _environment.GetCollisions(_trail).Where(h => h.Guid != this.Guid);
-
-            if (hits.Any()) this._brake = true;
-            else this._brake = false;
-
-            base.Tick(tick);
+            base.Tick(tick, _environment.GetCollisions(_trail).Where(h => h.Guid != this.Guid).Any());
 
             _cargo.Tick(tick);
 
