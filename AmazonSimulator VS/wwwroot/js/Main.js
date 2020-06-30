@@ -65,8 +65,8 @@ let controls = {
 
 let settings = {
   shadowMapRes: 2048,
-  displayPathfindingGraph: false,
-  displayRobotFOV: false
+  displayPathfindingGraph: true,
+  displayRobotFOV: true
 };
 
 function init( )

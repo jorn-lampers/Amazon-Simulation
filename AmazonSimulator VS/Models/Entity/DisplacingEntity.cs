@@ -32,18 +32,18 @@ namespace Models
             this._target = Position;
         }
 
-        public void SetTarget(Vector3 target)
+        public virtual void SetTarget(Vector3 target)
         {
             this._target = target;
             this._velocity = _maxMovementSpeed;
         }
 
-        public bool IsAtTarget => this._target == Position;
+        public bool IsAtTarget => this._target.Equals(this.Position);
 
         public override bool Tick(int tick)
         {
             // If Entity is not at its target position ...
-            if (!_target.Equals(this.Position))
+            if (!IsAtTarget)
             {
                 // Find direction towards target
                 var tDir = Vector3.Normalize(_target - this.Position);
@@ -76,6 +76,7 @@ namespace Models
                 }
 
             }
+            else this._velocity = 0f;
 
             return _needsUpdate;
         }

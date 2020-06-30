@@ -182,5 +182,10 @@ namespace Models {
             _brake = false;
             return _needsUpdate;
         }
+
+        public override void SetTarget(Vector3 target)
+        {
+            this._target = target;
+        }
     }
 }
