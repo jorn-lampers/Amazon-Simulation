@@ -11,10 +11,11 @@ namespace Models {
         private List<Vector3> _route = new List<Vector3>();
         private int _currentWaypoint;
 
-        protected bool _brake;
+        private bool _brake;
         protected float _acceleration;
 
         public List<Vector3> Route => _route;
+        public bool Brake => _brake;
         public Vector3 Destination
             => _route.Count > 0
             ? _route.Last()
@@ -137,12 +138,12 @@ namespace Models {
 
         public bool Tick(int tick, bool brake)
         {
-            _brake = brake;
-
             var d = GetRequiredDistanceToFullStop();
 
             if (Vector3.Distance(_target, Position) < d)
                 _brake = true;
+            else _brake = brake;
+
 
             if (_brake) // Decellerate velocity by acceleration if result >= 0
                 this._velocity = Math.Max(0, this._velocity - this._acceleration);
@@ -157,30 +158,12 @@ namespace Models {
             else if (_target.Equals(this.Position)) // Entity has reached a waypoint, cycle to the next waypoint
                 NextWaypoint();
 
-            _brake = false;
             return _needsUpdate;
         }
 
         public override bool Tick(int tick)
         {
-            if (Vector3.Distance(_target, Position) > GetRequiredDistanceToFullStop()) 
-                _brake = true;
-
-            if (_brake) // Decellerate velocity by acceleration if result >= 0
-                this._velocity = Math.Max(0, this._velocity - this._acceleration);
-            else // Accelerate velocity by acceleration if top speed has not been reached
-                this._velocity = Math.Min(this._velocity + this._acceleration, this._maxMovementSpeed);
-            
-            base.Tick(tick);
-
-            if (this.Position.Equals(Destination)) // Entity has reached its final pathfinding waypoint
-                ClearPathfindingTarget();
-
-            else if (_target.Equals(this.Position)) // Entity has reached a waypoint, cycle to the next waypoint
-                NextWaypoint();
-
-            _brake = false;
-            return _needsUpdate;
+            return Tick(tick, false);
         }
 
         public override void SetTarget(Vector3 target)

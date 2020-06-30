@@ -40,7 +40,7 @@ export function wrapModel ( model, name = "NO_NAME")
                 delete model.target;
             }
 
-            model.footprint = createSegmentWrapper( model, params.Trail );
+            model.footprint = createSegmentWrapper( model, params );
             scene.add( model.footprint );
 
             model.target = createTargetWrapper( model, params.Target );
@@ -52,9 +52,11 @@ export function wrapModel ( model, name = "NO_NAME")
 }
 
 // Debug function that generates a model of a robots 'monitored' area it checks to prevent collisions
-export function createSegmentWrapper( robot, segments )
+export function createSegmentWrapper( robot, params )
 {
     let group = new THREE.Group();
+
+    let segments = params.Trail;
 
     segments.forEach(function (segment)
     {
@@ -63,7 +65,8 @@ export function createSegmentWrapper( robot, segments )
         lineGeometry.vertices.push(new THREE.Vector3(segment.P.X, 0.1, segment.P.Y));
         lineGeometry.vertices.push(new THREE.Vector3(segment.Q.X, 0.1, segment.Q.Y));
 
-        let mat = new THREE.LineBasicMaterial({ color: 0x00ff00 });
+        let col = params.Brake ? 0xff0000 : 0x00ff00;
+        let mat = new THREE.LineBasicMaterial({ color: col });
 
         let mesh = new THREE.Line(
             lineGeometry,
